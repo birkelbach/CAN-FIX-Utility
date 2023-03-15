@@ -67,13 +67,22 @@ def getConfigItemWidget(c, parent):
         t = generic_types[c.datatype]
         if c.multiplier >= 1.0:
             w = QSpinBox(parent)
+            w.setSingleStep(int(c.multiplier))
+            w.setMinimum(c.get("min", t[0]))
+            w.setMaximum(c.get("max", t[1]))
+            try:
+                w.setValue(int(c.value))
+            except:
+                w.setValue(0)
         else:
             w = QDoubleSpinBox(parent)
-
-        w.setMinimum(c.get("min", t[0]))
-        w.setMaximum(c.get("max", t[1]))
-        w.setSingleStep(c.multiplier)
-        w.setValue(c.value)
+            w.setSingleStep(float(c.multiplier))
+            w.setMinimum(c.get("min", t[0]))
+            w.setMaximum(c.get("max", t[1]))
+            try:
+                w.setValue(c.value)
+            except:
+                w.setValue(0.0)
     else:
         w = None
     return w

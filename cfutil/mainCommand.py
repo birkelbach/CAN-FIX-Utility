@@ -19,11 +19,14 @@
 
 # Module interprets the command line arguments and performs the job(s) given
 
+
+import traceback
 import can
 import canfix
 import cfutil.config as config
 import cfutil.connection as connection
 import cfutil.devices as devices
+
 
 
 def list_devices():
@@ -68,7 +71,8 @@ def load_firmware(conn, filename, args):
     vcode = None
     if args.firmware_driver:
         driver = args.firmware_driver
-
+    if args.firmware_code:
+        vcode = args.firmware_code
     if args.target_node:
         node = args.target_node
     else:
@@ -151,11 +155,12 @@ def run(args):
             listen(conn, args.frame_count, args.raw)
             cmdrun = True
     except Exception as e:
-        print(e)
-        raise(e)
-    # finally:
-    #     connection.canbus.free_connection(conn)
-    #     return cmdrun
+        #print(e)
+        traceback.print_exc()
+        #raise(e)
+    finally:
+        connection.canbus.free_connection(conn)
+        return cmdrun
 
 if __name__ == "__main__":
     run(None)

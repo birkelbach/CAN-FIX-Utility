@@ -45,19 +45,19 @@ class FirmwareBase:
         self.__stopCallback = None
 
     def setProgressCallback(self, progress):
-        if isinstance(progress, collections.Callable):
+        if isinstance(progress, collections.abc.Callable):
             self.__progressCallback = progress
         else:
             raise TypeError("Argument passed is not a function")
 
     def setStatusCallback(self, status):
-        if isinstance(status, collections.Callable):
+        if isinstance(status, collections.abc.Callable):
             self.__statusCallback = status
         else:
             raise TypeError("Argument passed is not a function")
 
     def setStopCallback(self, stop):
-        if isinstance(stop, collections.Callable):
+        if isinstance(stop, collections.abc.Callable):
             self.__stopCallback = stop
         else:
             raise TypeError("Argument passed is not a function")
@@ -113,6 +113,7 @@ class FirmwareBase:
         if self.channel < 0:
             raise FirmwareError("No Free Channel")
         #print("Channel found:", self.channel)
+        print("self.firmwareCode = {}".format(self.firmwareCode))
         msg = canfix.UpdateFirmware(node=self.destNode, verification=self.firmwareCode, channel=self.channel)
         msg.sendNode = self.srcNode
         msg.msgType = canfix.MSG_REQUEST

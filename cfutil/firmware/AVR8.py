@@ -77,7 +77,7 @@ class Driver(FirmwareBase):
 
     def __fillBuffer(self, ch, address, data):
         length = len(data)
-        print("Address 0x{:08X} {}".format(address, address))
+        #print("Address 0x{:08X} {}".format(address, address))
         sframe = can.Message(arbitration_id = 0x7E0 + ch, is_extended_id =False,
                              data=[0x01, address & 0xFF, (address & 0xFF00) >> 8, (address & 0xFF0000) >> 16, (address & 0xFF000000) >> 24, 0, 1])
         self.can.send(sframe)
