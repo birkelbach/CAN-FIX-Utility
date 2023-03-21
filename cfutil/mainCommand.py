@@ -19,14 +19,15 @@
 
 # Module interprets the command line arguments and performs the job(s) given
 
-
 import traceback
+import logging
 import can
 import canfix
 import cfutil.config as config
 import cfutil.connection as connection
 import cfutil.devices as devices
 
+log = logging.getLogger(__name__)
 
 
 def list_devices():
@@ -37,24 +38,31 @@ def list_devices():
         #print(each.name, '[' + hex(each.deviceType) + ']')
 
 def listen(conn, msg_count, raw):
+    log.debug("Listen with msg_count = {}, raw = {}".format(msg_count, raw))
     count = 0
     while True:
         try:
             msg = conn.recv(1.0)
             if msg:
                 #print(str(msg) + canfix.parameters[msg.arbitration_id].name)
-                x = canfix.parseMessage(msg)
                 if raw:
                     print(str(msg))
                 else:
-                    print(canfix.Parameter(msg))
+                    x = canfix.parseMessage(msg)
+                    print(x)
                 count+=1
                 if msg_count != 0:
-                    if count > msg_count: break
+                    if count >= msg_count: break
         except KeyboardInterrupt:
             break
-        except:
-            print(str(msg))
+        except connection.Timeout:
+            #TODO do some timeout checking here
+            pass
+        except Exception as e:
+            if hasattr(e, 'message'):
+                log.error(e.message)
+            else:
+                log.error(str(e))
 
 # def findDevice(did):
 #     for each in devices.devices:

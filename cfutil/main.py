@@ -49,6 +49,7 @@ def main():
     parser.add_argument('--listen', action='store_true', help='Listen on the CANBus network and print to STDOUT')
     parser.add_argument('--frame-count', type=int, default=0, help='Number of frames to print before exiting')
     parser.add_argument('--raw', action='store_true', help='Display raw frames')
+    parser.add_argument('--timeout', type=int, default=0, help='Number of seconds to wait for a node to show up')
     parser.add_argument('--config-file', type=argparse.FileType('r'),
                             help='Alternate configuration file')
     parser.add_argument('--log-config', type=argparse.FileType('w'),
@@ -78,12 +79,11 @@ def main():
     # We don't run the GUI if mainCommand.run() executed some command or we
     # were in interactive mode.
     if args.interactive is False and not result:
-        try:
-            import PyQt5.QtGui
-        except ImportError:
-            log.error("PyQt Not Found")
-
-        from . import mainWindow
-        mainWindow.run(args)
+        from . import mainTk
+        app = mainTk.App(None)
+        app.run()
     connection.canbus.stop()
     connection.canbus.join()
+ 
+if __name__ == "__main__":
+    main()

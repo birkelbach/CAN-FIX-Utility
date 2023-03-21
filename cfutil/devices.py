@@ -84,6 +84,6 @@ for filename in dirlist:
 
 def findDevice(device, model, version):
     for each in devices:
-        if each.deviceType == device and each.modelNumber == model and each.version == version:
+        if each.deviceType == device and each.modelNumber == model:
             return each
     return None

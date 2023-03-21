@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 #  CAN-FIX Utilities - An Open Source CAN FIX Utility Package
 #  Copyright (c) 2012 Phil Birkelbach

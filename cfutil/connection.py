@@ -24,10 +24,7 @@
 import threading
 import logging
 import can
-try:
-    import queue
-except:
-    import Queue as queue
+import queue
 import cfutil.config as config
 
 log = logging.getLogger(__name__)
@@ -115,6 +112,7 @@ class CANBus(threading.Thread):
             self.sendMessageCallback(msg)
 
     def connect(self, interface, channel, **kwargs):
+        log.debug("Connecting... {} {}".format(interface, channel))
         try:
             self.__bus = can.ThreadSafeBus(channel, bustype=interface, **kwargs)
             self.channel = channel
@@ -128,6 +126,7 @@ class CANBus(threading.Thread):
         self.__connected.set()
 
     def disconnect(self):
+        log.debug("Disconnecting... {} {}".format(self.interface, self.channel))
         if not self.connected:
             return
         self.__bus.shutdown()
