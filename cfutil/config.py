@@ -69,7 +69,7 @@ def initialize(file, args):
     except:
         bitrate = 125000
 
-    node = int(config.get("can", "node"))
+    node = int(config.get("canfix", "node"))
     #auto_connect = config.getboolean("can", "auto_connect")
 
 

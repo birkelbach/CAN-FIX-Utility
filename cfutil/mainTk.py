@@ -17,13 +17,16 @@
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 import logging
-import can
 import logging.config
 import cfutil.config as config
 from . import nodes
+from . import connection
+from .connectTk  import ConnectDialog
 import tkinter as tk
 import tkinter.ttk as ttk
 import queue
+
+log = logging.getLogger(__name__)
 
 # Command Queue commands
 ADD_NODE = 1
@@ -53,6 +56,7 @@ class NodeView(ttk.Treeview):
         self.heading('data', text="Data")
         self.column('data', stretch=True)
 
+
 class ParameterView(ttk.Treeview):
     def __init__(self, master):
         columns = ('node', 'pid', 'name', 'value', 'quality')
@@ -69,23 +73,55 @@ class ParameterView(ttk.Treeview):
         self.heading('quality', text="Quality")
         self.column('quality', width=80, stretch=False)
 
+    
 
 class App(tk.Tk):
     def __init__(self, parent, *args, **kwargs):
         tk.Tk.__init__(self, parent, *args, **kwargs)
-
+        self.title("CANFiX Configuration Utility")
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
-        nb = ttk.Notebook(self)
+        self.nb = ttk.Notebook(self)
         self.cmd_queue = queue.Queue()
 
-        nodeTab = cfTab(nb)
-        parameterTab = cfTab(nb)
-        dataTab = cfTab(nb)
+        self.nt = nodes.NodeThread()
+        self.nt.set_node_callbacks(self.add_node, self.del_node, self.update_node)
+        self.nt.set_parameter_callbacks(self.add_parameter, self.del_parameter, self.update_parameter)
+        connection.canbus.connectedCallback = self.connect_callback
+        connection.canbus.disconnectedCallback = self.disconnect_callback
+        
+        self.menubar = tk.Menu(self)
+        self.config(menu=self.menubar)
+        file_menu = tk.Menu(self.menubar, tearoff = 0)
+        file_menu.add_separator()
+        file_menu.add_command(label='Exit', command=self.destroy, underline=1)
+        self.node_menu = tk.Menu(self.menubar, tearoff = 0)
+        self.node_menu.add_command(label='Connect...', underline=0, command=self.connect)
+        self.node_menu.add_command(label='Disconnect...', underline=0, command=self.disconnect)
+        self.node_menu.add_separator()
+        self.node_menu.add_command(label='Information...', underline=0, command=self.show_information)
+        self.node_menu.add_command(label='Configure Node...', underline=1, command=self.configure_node)
+        self.node_menu.add_separator()
+        self.node_menu.add_command(label='Update Firmware...', underline=0)
+        if connection.canbus.connected:
+            self.node_menu.entryconfig('Connect...', state='disabled')
+        else:
+            self.node_menu.entryconfig('Disconnect...', state='disabled')
+        help_menu = tk.Menu(self.menubar, tearoff = 0)
+        help_menu.add_command(label='Specification', underline=0)
+        help_menu.add_separator()
+        help_menu.add_command(label='About', underline=0)
+        self.menubar.add_cascade(label="File", menu=file_menu, underline=0)
+        self.menubar.add_cascade(label="Node", menu=self.node_menu, underline=0)
+        self.menubar.add_cascade(label="Help", menu=help_menu, underline=0)
+        
+        nodeTab = cfTab(self.nb)
+        parameterTab = cfTab(self.nb)
+        dataTab = cfTab(self.nb)
 
-        nb.add(nodeTab, text="Nodes")
-        nb.add(parameterTab, text="Parameters")
-        nb.add(dataTab, text="Data")
+        self.nb.add(nodeTab, text="Nodes")
+        self.nb.add(parameterTab, text="Parameters")
+        self.nb.add(dataTab, text="Data")
         
         self.nodeview = NodeView(nodeTab)
         self.parameterView = ParameterView(parameterTab)
@@ -99,11 +135,12 @@ class App(tk.Tk):
         paramscroll = ttk.Scrollbar(parameterTab, orient=tk.VERTICAL, command=self.parameterView.yview)
         self.parameterView.configure(yscroll=paramscroll.set)
         paramscroll.grid(row=0, column=1, sticky='ns')
-        nb.grid(row=0, column=0, sticky=tk.NSEW)
+        self.nb.grid(row=0, column=0, sticky=tk.NSEW)
 
-        x = self.nodeview.get_children()
-        for each in x:
-            print(each)
+        # nodeTab.bind("<Visibility>", self.node_show)
+        # parameterTab.bind("<Visibility>", self.parameter_show)
+        self.nodeview.bind("<Double-Button-1>", self.node_select)
+        self.parameterView.bind("<Double-Button-1>", self.parameter_select)
 
     # These are callbacks that would be called from the node thread.  Commands
     # are added to the queue so that the gui thread can make updates.
@@ -125,6 +162,86 @@ class App(tk.Tk):
     def update_parameter(self, parameter):
         self.cmd_queue.put((UPDATE_PARAMETER, parameter))
     
+    def connect_callback(self):
+        self.node_menu.entryconfig('Connect...', state='disabled')
+        self.node_menu.entryconfig('Disconnect...', state='normal')
+
+    def disconnect_callback(self):
+        self.node_menu.entryconfig('Connect...', state='normal')
+        self.node_menu.entryconfig('Disconnect...', state='disabled')
+
+    def __get_current_node(self):
+        curItem = self.nodeview.focus()
+        parent = self.nodeview.parent(curItem)
+        item = self.nodeview.item(curItem)
+        if parent != "":
+            node = parent
+        else:
+            if item['values']:
+                node = item['values'][0]
+            else:
+                node = None
+        return node
+        
+    def __get_current_parameter(self):
+        curItem = self.parameterView.focus()
+        item = self.parameterView.item(curItem)
+        return item
+        
+    def show_information(self):
+        tab = self.nb.tab('current')
+        if tab['text'] == "Nodes":
+            node = self.__get_current_node()
+            if node is not None:
+                print("Information Node {}".format(node))
+            else:
+                print("No Node Selected")
+        elif tab['text'] == "Parameters":
+            item = self.__get_current_parameter()
+            if item['values']:
+                p = item['values'][1]
+                print("Information for {}".format(p))
+            else:
+                print("No Parameter Selected")
+        else:
+            pass
+        
+    # Main GUI functions
+    def connect(self):
+        cd = ConnectDialog(self)
+        cd.mainloop()
+       
+        if cd.okay:
+            try:
+                args = cd.arguments
+                connection.canbus.connect(cd.interface, **args)
+            except Exception as e:
+                log.error(e)
+        cd.destroy()
+        
+    def disconnect(self):
+        connection.canbus.disconnect()
+
+    def configure_node(self):
+        tab = self.nb.tab('current')
+        node = None
+        if tab['text'] == "Nodes":
+            node = self.__get_current_node()
+        elif tab['text'] == "Parameters":
+            item = self.__get_current_parameter()
+            if item['values']:
+                node = item['values'][0]
+        if node is not None:
+            print("Configure Node {}".format(node))
+        else:
+            print("No Node Selected")
+
+    def node_select(self, event):
+        self.show_information()
+    
+    def parameter_select(self, event):
+        self.show_information()
+
 
     def manager(self):
         done = False
@@ -144,7 +261,7 @@ class App(tk.Tk):
                         self.nodeview.insert(cmd[1].nodeid, tk.END, values = ('', 'Version', cmd[1].version), iid=str(cmd[1].nodeid)+".version", open=False)
                     elif cmd[0] == UPDATE_NODE:
                         self.nodeview.set(cmd[1].nodeid, 'name', cmd[1].name)
-                        self.nodeview.set(str(cmd[1].nodeid)+".device", 'data', cmd[1].name)
+                        self.nodeview.set(str(cmd[1].nodeid)+".device", 'data', cmd[1].deviceid)
                         self.nodeview.set(str(cmd[1].nodeid)+".model", 'data', cmd[1].model)
                         self.nodeview.set(str(cmd[1].nodeid)+".version", 'data', cmd[1].version)
                     elif cmd[0] == DEL_NODE:
@@ -169,21 +286,13 @@ class App(tk.Tk):
                     print(e) #TODO change to debug logging
             
 
-        # curItem = self.nodeview.focus()
-        # print(curItem)
-        # item = self.nodeview.item(curItem) 
-        # print(item)
-        #print(self.nodeview.parent(curItem))
         self.after(1000, self.manager)
 
     def run(self):
-        nt = nodes.NodeThread()
-        nt.set_node_callbacks(self.add_node, self.del_node, self.update_node)
-        nt.set_parameter_callbacks(self.add_parameter, self.del_parameter, self.update_parameter)
-        nt.start()
+        self.nt.start() # Start the Node Handling Thread
         self.after(1000, self.manager)
-        self.mainloop()
-        nt.stop()
+        self.mainloop() # Start the GUI
+        self.nt.stop()
 
 
 if __name__ == "__main__":

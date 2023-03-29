@@ -228,11 +228,6 @@ class NodeThread(Thread):
     def run(self):
         lastscan = time.time()
         self.conn = connection.canbus.get_connection()
-        nid = canfix.NodeIdentification()
-        nid.sendNode = config.node
-        nid.destNode = 0 # broadcast
-        if connection.canbus.connected:
-            self.conn.send(nid.msg)
         while(not self.getout):
             thisscan = time.time()
             try:

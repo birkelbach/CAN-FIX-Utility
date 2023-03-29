@@ -72,7 +72,6 @@ class Connection:
                 return self.recvQueue.get(block=True)
             else:
                 return self.recvQueue.get(block=True, timeout=timeout)
-
         except queue.Empty:
             raise Timeout()
 
@@ -85,10 +84,21 @@ class CANBus(threading.Thread):
         self.__connections = []
         self.__bus = None
         self.__connected = threading.Event()
+        self.__connected.clear()
+        # Counters
+        self.sendFrames = 0
+        self.recvFrames = 0
+        self.sendErrors = 0
+        self.recvErrors = 0
+        # Callback functions
         self.connectedCallback = None
         self.disconnectedCallback = None
         self.recvMessageCallback = None
         self.sendMessageCallback = None
+        self.recvMessageCallback = None
+        self.sendMessageCallback = None
+        self.recvErrorCallback = None
+        self.sendErrorCallback = None
 
     def run(self):
         while self.getout is False:
@@ -96,46 +106,58 @@ class CANBus(threading.Thread):
             if connect_flag:
                 try:
                     msg = self.__bus.recv(timeout = 1.0)
+                    if msg:
+                        for each in self.__connections:
+                            each.recvQueue.put(msg)
+                        if self.recvMessageCallback != None:
+                            self.recvMessageCallback(msg)
+                        self.recvFrames += 1
                 except Exception as e:
+                    self.recvErrors += 1
                     log.error(e)
-                if msg:
-                    #print(msg)
-                    for each in self.__connections:
-                        each.recvQueue.put(msg)
-                    if self.recvMessageCallback != None:
-                        self.recvMessageCallback(msg)
+                    if self.recvErrorCallback:
+                        self.recvErrorCallback(e)
+                
 
-    # TODO: raise not connected error
     def send(self, msg):
-        self.__bus.send(msg)
-        if self.sendMessageCallback != None:
-            self.sendMessageCallback(msg)
-
+        try:
+            self.__bus.send(msg)
+            self.sendFrames += 1
+            if self.sendMessageCallback != None:
+                self.sendMessageCallback(msg)
+            return True
+        except Exception as e:
+            self.sendErrors += 1
+            log.error(e)
+            if self.sendErrorCallback:
+                self.sendErrorCallback(e)
+            return False
+        
     def connect(self, interface, channel, **kwargs):
         log.debug("Connecting... {} {}".format(interface, channel))
         try:
             self.__bus = can.ThreadSafeBus(channel, bustype=interface, **kwargs)
             self.channel = channel
             self.interface = interface
+            self.__connected.set()
+            if self.connectedCallback is not None:
+                self.connectedCallback()
         except Exception as e:
             log.error(e)
             raise e
-        if self.connectedCallback is not None:
-            self.connectedCallback()
-        #if error is None:
-        self.__connected.set()
-
+        
     def disconnect(self):
         log.debug("Disconnecting... {} {}".format(self.interface, self.channel))
         if not self.connected:
             return
         self.__bus.shutdown()
+        self.__connected.clear()
         if self.disconnectedCallback is not None:
             self.disconnectedCallback()
-        self.__connected.clear()
 
     def get_connected(self):
         return self.__connected.isSet()
+    
     connected = property(get_connected)
 
     def connect_wait(self, timeout=None):
