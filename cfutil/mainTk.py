@@ -36,16 +36,29 @@ ADD_PARAMETER = 4
 DEL_PARAMETER = 5
 UPDATE_PARAMETER = 6
 
+class StatusBar(tk.Frame):
+    def __init__(self, master):
+        tk.Frame.__init__(self, master)
+        self.variable=tk.StringVar()
+        self.label=tk.Label(self, bd=1, relief=tk.SUNKEN, anchor=tk.W,
+                           textvariable=self.variable,
+                           font=('arial',10,'normal'))
+        self.variable.set('')
+        self.label.pack(fill=tk.X)
+
+    def set(self, value):
+        self.variable.set(str(value))
+
 class cfTab(ttk.Frame):
     def __init__(self, master):
         ttk.Frame.__init__(self, master)
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
-    
+
 class NodeView(ttk.Treeview):
     def __init__(self, master):
         columns = ('id', 'name', 'data')
-    
+
         ttk.Treeview.__init__(self, master, columns = columns, selectmode='browse')
         self.heading('#0', text="")
         self.column('#0', width=20, stretch=False)
@@ -56,11 +69,10 @@ class NodeView(ttk.Treeview):
         self.heading('data', text="Data")
         self.column('data', stretch=True)
 
-
 class ParameterView(ttk.Treeview):
     def __init__(self, master):
         columns = ('node', 'pid', 'name', 'value', 'quality')
-    
+
         ttk.Treeview.__init__(self, master, columns = columns, selectmode='browse', show='headings')
         self.heading('node', text="Node")
         self.column('node', width=40, stretch=False)
@@ -73,7 +85,6 @@ class ParameterView(ttk.Treeview):
         self.heading('quality', text="Quality")
         self.column('quality', width=80, stretch=False)
 
-    
 
 class App(tk.Tk):
     def __init__(self, parent, *args, **kwargs):
@@ -89,7 +100,7 @@ class App(tk.Tk):
         self.nt.set_parameter_callbacks(self.add_parameter, self.del_parameter, self.update_parameter)
         connection.canbus.connectedCallback = self.connect_callback
         connection.canbus.disconnectedCallback = self.disconnect_callback
-        
+
         self.menubar = tk.Menu(self)
         self.config(menu=self.menubar)
         file_menu = tk.Menu(self.menubar, tearoff = 0)
@@ -114,7 +125,7 @@ class App(tk.Tk):
         self.menubar.add_cascade(label="File", menu=file_menu, underline=0)
         self.menubar.add_cascade(label="Node", menu=self.node_menu, underline=0)
         self.menubar.add_cascade(label="Help", menu=help_menu, underline=0)
-        
+
         nodeTab = cfTab(self.nb)
         parameterTab = cfTab(self.nb)
         dataTab = cfTab(self.nb)
@@ -122,20 +133,27 @@ class App(tk.Tk):
         self.nb.add(nodeTab, text="Nodes")
         self.nb.add(parameterTab, text="Parameters")
         self.nb.add(dataTab, text="Data")
-        
+
         self.nodeview = NodeView(nodeTab)
         self.parameterView = ParameterView(parameterTab)
-        
+
         self.nodeview.grid(row=0, column=0, sticky=tk.NSEW)
         nodescroll = ttk.Scrollbar(nodeTab, orient=tk.VERTICAL, command=self.nodeview.yview)
         self.nodeview.configure(yscroll=nodescroll.set)
         nodescroll.grid(row=0, column=1, sticky='ns')
-        
+
         self.parameterView.grid(row=0, column=0, sticky=tk.NSEW)
         paramscroll = ttk.Scrollbar(parameterTab, orient=tk.VERTICAL, command=self.parameterView.yview)
         self.parameterView.configure(yscroll=paramscroll.set)
         paramscroll.grid(row=0, column=1, sticky='ns')
-        self.nb.grid(row=0, column=0, sticky=tk.NSEW)
+        self.nb.pack(expand=True, fill=tk.BOTH, side=tk.TOP)
+        self.sb = StatusBar(self)
+        if connection.canbus.connected:
+            self.sb.set("Connected")
+        else:
+            self.sb.set("Not Connected")
+
+        self.sb.pack(fill=tk.X)
 
         # nodeTab.bind("<Visibility>", self.node_show)
         # parameterTab.bind("<Visibility>", self.parameter_show)
@@ -149,7 +167,7 @@ class App(tk.Tk):
 
     def del_node(self, node):
         self.cmd_queue.put((DEL_NODE, node))
-    
+
     def update_node(self, node):
         self.cmd_queue.put((UPDATE_NODE, node))
 
@@ -158,10 +176,10 @@ class App(tk.Tk):
 
     def del_parameter(self, parameter):
         self.cmd_queue.put((DEL_PARAMETER, parameter))
-    
+
     def update_parameter(self, parameter):
         self.cmd_queue.put((UPDATE_PARAMETER, parameter))
-    
+
     def connect_callback(self):
         self.node_menu.entryconfig('Connect...', state='disabled')
         self.node_menu.entryconfig('Disconnect...', state='normal')
@@ -182,12 +200,12 @@ class App(tk.Tk):
             else:
                 node = None
         return node
-        
+
     def __get_current_parameter(self):
         curItem = self.parameterView.focus()
         item = self.parameterView.item(curItem)
         return item
-        
+
     def show_information(self):
         tab = self.nb.tab('current')
         if tab['text'] == "Nodes":
@@ -205,22 +223,28 @@ class App(tk.Tk):
                 print("No Parameter Selected")
         else:
             pass
-        
+
     # Main GUI functions
     def connect(self):
         cd = ConnectDialog(self)
         cd.mainloop()
-       
+
         if cd.okay:
             try:
+                self.sb.set("Connecting")
                 args = cd.arguments
                 connection.canbus.connect(cd.interface, **args)
+                self.sb.set("Connected")
             except Exception as e:
                 log.error(e)
+                self.sb.set(e)
         cd.destroy()
-        
+
     def disconnect(self):
+        self.sb.set("Disconnecting")
         connection.canbus.disconnect()
+        self.sb.set("Disconnected")
+
 
     def configure_node(self):
         tab = self.nb.tab('current')
@@ -238,7 +262,7 @@ class App(tk.Tk):
 
     def node_select(self, event):
         self.show_information()
-    
+
     def parameter_select(self, event):
         self.show_information()
 
@@ -284,7 +308,7 @@ class App(tk.Tk):
                         self.parameterView.set((cmd[1].pid, cmd[1].index), 'quality', cmd[1].quality)
                 except Exception as e:
                     print(e) #TODO change to debug logging
-            
+
 
         self.after(1000, self.manager)
 

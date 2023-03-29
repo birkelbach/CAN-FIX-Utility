@@ -117,7 +117,7 @@ class CANBus(threading.Thread):
                     log.error(e)
                     if self.recvErrorCallback:
                         self.recvErrorCallback(e)
-                
+
 
     def send(self, msg):
         try:
@@ -132,12 +132,12 @@ class CANBus(threading.Thread):
             if self.sendErrorCallback:
                 self.sendErrorCallback(e)
             return False
-        
-    def connect(self, interface, channel, **kwargs):
-        log.debug("Connecting... {} {}".format(interface, channel))
+
+    def connect(self, interface, **kwargs):
+        log.debug("Connecting... {}".format(interface))
         try:
-            self.__bus = can.ThreadSafeBus(channel, bustype=interface, **kwargs)
-            self.channel = channel
+            self.__bus = can.ThreadSafeBus(bustype=interface, **kwargs)
+            #self.channel = channel
             self.interface = interface
             self.__connected.set()
             if self.connectedCallback is not None:
@@ -145,9 +145,9 @@ class CANBus(threading.Thread):
         except Exception as e:
             log.error(e)
             raise e
-        
+
     def disconnect(self):
-        log.debug("Disconnecting... {} {}".format(self.interface, self.channel))
+        log.debug("Disconnecting... {}".format(self.interface))
         if not self.connected:
             return
         self.__bus.shutdown()
@@ -157,7 +157,7 @@ class CANBus(threading.Thread):
 
     def get_connected(self):
         return self.__connected.isSet()
-    
+
     connected = property(get_connected)
 
     def connect_wait(self, timeout=None):

@@ -72,9 +72,9 @@ def main():
     from . import connection
 
     try:
-        connection.canbus.connect(config.interface, config.channel)
+        connection.canbus.connect(config.interface, channel=config.channel)
     except:
-        log.error("Failed to connect to {} - {}".format(config.interface, config.channel))
+        log.error("Failed to connect to {}".format(config.interface))
     result = mainCommand.run(args)
     # We don't run the GUI if mainCommand.run() executed some command or we
     # were in interactive mode.
@@ -84,6 +84,6 @@ def main():
         app.run()
     connection.canbus.stop()
     connection.canbus.join()
- 
+
 if __name__ == "__main__":
     main()
