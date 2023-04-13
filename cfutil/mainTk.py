@@ -16,12 +16,15 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+# TODO Get rid of the .pack() geometry managers and stick with .grid()
+
 import logging
 import logging.config
 import cfutil.config as config
 from . import nodes
 from . import connection
 from .connectTk  import ConnectDialog
+from .configTk  import ConfigDialog
 import tkinter as tk
 import tkinter.ttk as ttk
 import queue
@@ -162,6 +165,7 @@ class App(tk.Tk):
 
     # These are callbacks that would be called from the node thread.  Commands
     # are added to the queue so that the gui thread can make updates.
+    # TODO Change these to use the custom virtual events instead of the command queue
     def add_node(self, node):
         self.cmd_queue.put((ADD_NODE, node))
 
@@ -242,6 +246,7 @@ class App(tk.Tk):
 
     def disconnect(self):
         self.sb.set("Disconnecting")
+        self.update_idletasks()
         connection.canbus.disconnect()
         self.sb.set("Disconnected")
 
@@ -257,6 +262,9 @@ class App(tk.Tk):
                 node = item['values'][0]
         if node is not None:
             print("Configure Node {}".format(node))
+            cd = ConfigDialog(self)
+            cd.mainloop()
+            cd.destroy()
         else:
             print("No Node Selected")
 
@@ -266,7 +274,7 @@ class App(tk.Tk):
     def parameter_select(self, event):
         self.show_information()
 
-
+    # TODO instead of all this queue crap we need to use custom virtual events.
     def manager(self):
         done = False
         while(not done):
@@ -298,17 +306,16 @@ class App(tk.Tk):
                         v = (cmd[1].nodeid,
                             pid,
                             cmd[1].name,
-                            "{} {}".format(cmd[1].value, cmd[1].units),
+                            "{:.4g} {}".format(cmd[1].value, cmd[1].units),
                             cmd[1].quality)
                         self.parameterView.insert('', tk.END, values=v, iid=(cmd[1].pid, cmd[1].index), open=False)
                     elif cmd[0] == DEL_PARAMETER:
                         self.parameterView.delete((cmd[1].pid, cmd[1].index))
                     elif cmd[0] == UPDATE_PARAMETER:
-                        self.parameterView.set((cmd[1].pid, cmd[1].index), 'value', "{} {}".format(cmd[1].value, cmd[1].units))
+                        self.parameterView.set((cmd[1].pid, cmd[1].index), 'value', "{:.4g} {}".format(cmd[1].value, cmd[1].units))
                         self.parameterView.set((cmd[1].pid, cmd[1].index), 'quality', cmd[1].quality)
                 except Exception as e:
                     print(e) #TODO change to debug logging
-
 
         self.after(1000, self.manager)
 
