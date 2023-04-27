@@ -1,7 +1,4 @@
-Parameters that were disabled would be grayed out.  Node report commands can be
-sent when the node is expanded to get all the information.  This would only
-work on nodes with a proper EDS file as there is no mechanism to poll a device
-for the enabled status of a parameter.
+Add navigation buttons functions to dialogs.  Mostly enter and escape.
 
 Enable / Disable parameters
 
@@ -25,10 +22,22 @@ online help?
 Save and restore configuration to nodes.  Probably use json.  Also add a
 "Save Entire Network Configuration" menu item.
 
-Firmware updating has some problems:
+Firmware updating has some problems:  REDO THIS
 
   Test Firmware download on real hardware.
 
   Firmware download for 'unknown' devices
 
 Global configuration for our node number
+
+Some kind of standard file sending / receiving protocol for some devices.  This could
+be used to transfer more advanced configuration files, interpreter files, or
+logged data files.  Would use the two-way channel mechanism.
+
+Network health page.  Bus bandwidth (if available), errors if multiple nodes are
+sending the same parameter.
+
+Method to send certain parameters from the Utility.  Perhaps some kind of custom
+page that we could use to send test information.  Configurable with json files maybe?
+
+Save settings to disk somehow.  Probably use the ini file?

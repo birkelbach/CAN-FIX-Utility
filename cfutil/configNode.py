@@ -34,7 +34,32 @@ from . import config
 
 log = logging.getLogger(__name__)
 
+known_types = ["CHAR","BYTE","WORD","SHORT","USHORT","INT","UINT","DINT","UDINT","FLOAT"]
+int_types = known_types[3:9]
+
 canbus = connection.canbus
+
+def queryNodeConfiguration(sendNode, destNode, key):
+    ncq = canfix.NodeConfigurationQuery(key = key)
+    conn = canbus.get_connection()
+    ncq.sendNode = sendNode
+    ncq.destNode = destNode
+    conn.send(ncq.msg)
+    endtime = time.time() + 1.0
+    while(True):
+        try:
+            rmsg = conn.recv(timeout = 1.0)
+        except connection.Timeout:
+            canbus.free_connection(conn)
+            return None
+        p = canfix.parseMessage(rmsg)
+        if isinstance(p, canfix.NodeConfigurationQuery) and p.destNode == sendNode:
+            canbus.free_connection(conn)
+            return p
+        else:
+            if time.time() > endtime:
+                canbus.free_connection(conn)
+                return None
 
 # convienience function to get the node information from a node on the
 # network.  Returns a tuple as (device type, model number, firmware version)

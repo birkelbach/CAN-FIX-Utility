@@ -135,7 +135,7 @@ class App(tk.Tk):
 
         self.nb.add(nodeTab, text="Nodes")
         self.nb.add(parameterTab, text="Parameters")
-        self.nb.add(dataTab, text="Data")
+        self.nb.add(dataTab, text="Traffic")
 
         self.nodeview = NodeView(nodeTab)
         self.parameterView = ParameterView(parameterTab)
@@ -262,7 +262,7 @@ class App(tk.Tk):
                 node = item['values'][0]
         if node is not None:
             print("Configure Node {}".format(node))
-            cd = ConfigDialog(self)
+            cd = ConfigDialog(self, self.nt.nodelist[node])
             cd.mainloop()
             cd.destroy()
         else:

@@ -23,10 +23,7 @@
 import glob
 import os
 import platform
-try:
-    import configparser
-except:
-    import ConfigParser as configparser
+import configparser
 
 # The DataPath is the location of our XML device definition and
 # protocol definition files.  It is simply a string of the absolute
