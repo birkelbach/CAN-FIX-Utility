@@ -166,6 +166,7 @@ class App(tk.Tk):
     # These are callbacks that would be called from the node thread.  Commands
     # are added to the queue so that the gui thread can make updates.
     # TODO Change these to use the custom virtual events instead of the command queue
+    #      This doesn't really work because there is no good way to pass data with the event
     def add_node(self, node):
         self.cmd_queue.put((ADD_NODE, node))
 

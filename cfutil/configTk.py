@@ -28,6 +28,10 @@ import canfix
 
 log = logging.getLogger(__name__)
 
+class ConfigError(Exception):
+    pass
+
+
 # These are the custom widgets that we use for editing the configuration.  They
 # are smart enough to deal with the types and min/max attributes of the key
 class TextEntry(tk.Entry):
@@ -41,20 +45,30 @@ class TextEntry(tk.Entry):
 
 class IntEntry(tk.Entry):
     def __init__(self, parent, *args, **kwargs):
-        tk.Entry.__init__(self, parent, *args, **kwargs)
+        self.text = tk.StringVar()
+        tk.Entry.__init__(self, parent, textvariable=self.text, *args, **kwargs)
 
     @property
     def value(self):
-        return self.get()
+        return int(self.text.get())
+
+    @value.setter
+    def value(self, v):
+        self.text.set(str(int(v)))
 
 
 class FloatEntry(tk.Entry):
     def __init__(self, parent, *args, **kwargs):
-        tk.Entry.__init__(self, parent, *args, **kwargs)
+        self.text = tk.StringVar()
+        tk.Entry.__init__(self, parent, textvariable=self.text, *args, **kwargs)
 
     @property
     def value(self):
-        return self.get()
+        return float(self.get())
+
+    @value.setter
+    def value(self, v):
+        self.text.set(str(float(v)))
 
 
 class ListBox(ttk.Combobox):
@@ -62,11 +76,58 @@ class ListBox(ttk.Combobox):
         ttk.Combobox.__init__(self, parent, *args, **kwargs)
         self.selections = selections
         self["values"] = list(self.selections.keys())
-    
+
     @property
     def value(self):
         return self.selections[self.get()]
-    
+
+    @value.setter
+    def value(self, v):
+        for key, value in self.selections.items():
+            if value == v:
+                self.set(key)
+        # If we don't have a match then ignore it.
+
+
+class BitSelectBox(tk.Frame):
+    def __init__(self, parent, selections, bitsize, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.selections = selections
+        self.variables = []*bitsize
+        for x in range(bitsize):
+            self.variables.append(tk.IntVar(self, 0))
+        self.checks = []
+        x = 0
+        for k, v in selections.items():
+            cb = ttk.Checkbutton(self, text = k, variable=self.variables[v], onvalue=1, offvalue=0)
+            cb.grid(column=0, row=x, sticky=tk.W)
+            self.checks.append(cb)
+            x += 1
+
+    @property
+    def value(self):
+        v=0
+        for i, x in enumerate(self.variables):
+            v += 2**i * x.get()
+
+        return v
+
+    @value.setter
+    def value(self, v):
+        if isinstance(v, list): # BYTEs and WORDs are returned as lists of BOOLS from che canfix module
+            for x in range(len(self.variables)):
+                if v[x]:
+                    self.variables[x].set(1)
+                else:
+                    self.variables[x].set(0)
+        else: # treat it like an integer
+            for x in range(len(self.variables)):
+                if v & 2**x:
+                    self.variables[x].set(1)
+                else:
+                    self.variables[x].set(0)
+        # If it's neither then let the exceptions rise, we've messed up somewhere
+
 
 
 # This is just a shortcut for storing the information for one configuration key
@@ -83,7 +144,7 @@ class ConfigControl():
         else:
             self.name = None
         if "type" in item:
-            self.datatype = item["type"]
+            self.datatype = item["type"].upper()
         else:
             self.datatype = "UINT" #default to 16 bit unsigned ?????
         if "input" in item:
@@ -91,13 +152,19 @@ class ConfigControl():
         else:
             self.input = "entry"
         if "min" in item:
-            self.min = float(item["min"])
+            if self.datatype == "FLOAT":
+                self.min = float(item["min"])
+            else:
+                self.min = int(item["min"])
         else:
-            self.min = 0
+            self.min = None
         if "max" in item:
-            self.max = float(item["max"])
+            if self.datatype == "FLOAT":
+                self.max = float(item["max"])
+            else:
+                self.max = int(item["max"])
         else:
-            self.max = 0
+            self.max = None
         if "multiplier" in item:
             self.multiplier = float(item["multiplier"])
         else:
@@ -120,9 +187,10 @@ class ConfigControl():
 class ConfigRecord():
     def __init__(self, item):
         self.key = item["key"]
-        self.dirty = False    # Change to true if edited and not sent
         self.__parentValue = None
         self.dependentChildren = []
+        self.__value = None
+        self.__saved_value = self.__value
         if "depends" in item: # This configuration item is a dependent key
             self.dependent = True
             self.parentKey = item["depends"]["key"]
@@ -162,13 +230,56 @@ class ConfigRecord():
     @property
     def value(self):
         return self.__value
-    
+
     @value.setter
     def value(self, v):
-        self.__value = v
+        if isinstance(v, list):
+            x = 0
+            for i, val in enumerate(v):
+                if val: x += 2**i
+            self.__value = x
+        else:
+            if self.min != None and v < self.min:
+                self.__value = self.min
+            elif self.max != None and v > self.max:
+                self.__value = self.max
+            else:
+                self.__value = v
         if self.dependentChildren:
             for each in self.dependentChildren:
                 each.parentValue = v
+
+    @property
+    def value_text(self):
+        if self.input == 'list':
+            for key, value in self.control.selections.items():
+                if value == self.value:
+                    return key
+            return "-" # If we don't find it in the list
+        elif self.input == 'entry':
+            if self.datatype in configNode.int_types:
+                return str(int(self.value))
+            elif self.datatype == "FLOAT":
+                return "{:.2f}".format(self.value)
+            elif self.datatype in [ "BYTE", "WORD" ]:
+                return "0x{:x}".format(self.value)
+        elif self.input == 'select':
+            if self.datatype == "BYTE":
+                return "{:08b}".format(self.value)
+            elif self.datatype == "WORD":
+                return "{:016b}".format(self.value)
+            else:
+                raise ValueError("select input must be BYTE or WORD")
+
+        if self.value == None:
+            return "-" # If we get here then we didn't match anything but we need to do this.
+        else:
+            return str(self.value) # temporary for now
+
+
+    @property
+    def dirty(self):
+        return self.__value != self.__saved_value
 
     @property
     def name(self):
@@ -195,6 +306,30 @@ class ConfigRecord():
             self.control.units = m
 
     @property
+    def min(self):
+        if self.control:
+            return self.control.min
+        else:
+            return None
+
+    @min.setter
+    def min(self, m):
+        if self.control:
+            self.control.min = m
+
+    @property
+    def max(self):
+        if self.control:
+            return self.control.max
+        else:
+            return None
+
+    @max.setter
+    def max(self, m):
+        if self.control:
+            self.control.max = m
+
+    @property
     def multiplier(self):
         if self.control:
             return self.control.multiplier
@@ -216,7 +351,7 @@ class ConfigRecord():
     @input.setter
     def input(self, m):
         if self.control:
-            self.control.input = m
+            self.control.input = m.lower()
 
     @property
     def datatype(self):
@@ -228,8 +363,10 @@ class ConfigRecord():
     @datatype.setter
     def datatype(self, m):
         if self.control:
-            self.control.datatype = m
-    
+            self.control.datatype = m.upper()
+
+    def save(self):
+        self.__saved_value = self.value
 
     # return a ttk widget that can be used to edit this key/value pair
     def widget(self, parent):
@@ -242,8 +379,18 @@ class ConfigRecord():
             elif self.datatype.upper() == "CHAR":
                 self.__widget = TextEntry(parent)
         elif input == "list":
-                self.__widget = ListBox(parent, self.control.selections)
+            self.__widget = ListBox(parent, self.control.selections)
+        elif input == "select":
+            if self.datatype =="BYTE":
+                self.__widget = BitSelectBox(parent, self.control.selections, 8)
+            elif self.datatype =="WORD":
+                self.__widget = BitSelectBox(parent, self.control.selections, 16)
+            else:
+                raise ConfigError("select input type should be for BYTE or WORD only")
+        else:
+            raise ConfigError("Unknown input type")
 
+        self.__widget.value = self.value
         return self.__widget
 
 
@@ -258,7 +405,7 @@ class ConfigTree(ttk.Treeview):
         self.heading('key', text='Key')
         self.column('description', stretch=True)
         self.heading('description', text='Description')
-        self.column('value', width=40,  stretch=False)
+        self.column('value', width=100,  stretch=True)
         self.heading('value', text='Value')
         self.column('units', width=40,  stretch=False)
         self.heading('units', text='Units')
@@ -282,27 +429,39 @@ class ConfigTree(ttk.Treeview):
                 cfg.datatype = i.datatype
                 cfg.multiplier = i.multiplier
                 i.value = cfg.value
+                i.save()
                 if i.dependentChildren:
                     for each in i.dependentChildren:
                         each.parentValue = i.value
 
-                self.insert('', 'end', iid=i.key, values = [i.key, i.name, i.value, i.units])
-            except:
-                self.insert('', 'end', iid=i.key, values = [i.key, "-", "-", ""])
-    
+                self.insert('', 'end', iid=i.key, values = [i.key, i.name, i.value_text, i.units])
+            except Exception as e:
+                print(e)
+                self.insert('', 'end', iid=i.key, values = [i.key, i.name, "-", ""])
+                raise(e)
+
     # TODO only set the dirty flag and tags when the value is different than what we read from the node
     def set_value(self, recordKey, value):
-        self.set(recordKey, "value", value)
-        self.item(recordKey, tags="dirty")
         for i in self.records:
             if i.key == recordKey:
-                i.dirty = True
-                i.value = value
-
-
-        
-         
-
+                record = i
+        #i.dirty = True
+        record.value = value
+        self.set(recordKey, "value", record.value_text)
+        if record.dirty:
+            self.item(recordKey, tags="dirty")
+        else:
+            self.item(recordKey, tags="")
+        # if we have dependent children then we also need to update these
+        if record.dependentChildren:
+            for d in record.dependentChildren:
+                self.set(d.key, "description", d.name)
+                self.set(d.key, "value", d.value_text)
+                self.set(d.key, "units", d.units)
+                if d.dirty:
+                    self.item(d.key, tags="dirty")
+                else:
+                    self.item(d.key, tags="")
 
 
 
@@ -352,6 +511,7 @@ class ConfigDialog(tk.Toplevel):
         self.grab_set() # makes the dialog modal
 
 
+    # event called when the users changes which item is selected in the tree
     def configSelect(self, e):
         curItem = self.treeView.focus()
         item = self.treeView.item(curItem)
@@ -372,9 +532,10 @@ class ConfigDialog(tk.Toplevel):
                     l = ttk.Label(self.cfgFrame, text = each.units)
                     l.grid(row=1, column=1, padx = 4, sticky=tk.W)
                 self.currentItem = each
-                
+
 
     def cfg_apply(self):
+        # TODO deal with the exceptions for values that can't be converted properly
         self.treeView.set_value(self.currentItem.key, self.cfgWidget.value)
 
     # send button callback.
@@ -393,3 +554,5 @@ if __name__ == "__main__":
 # TODO:
 #    Make the dialog default to the previous set of interface/arguments
 #    Dialog opening position and size
+#    On closing warn if there are dirty records
+#
