@@ -424,11 +424,8 @@ class ConfigTree(ttk.Treeview):
                         each.dependentChildren.append(i)
 
         for i in self.records:
-            cfg = configNode.queryNodeConfiguration(config.node, node.nodeid, i.key)
             try:
-                cfg.datatype = i.datatype
-                cfg.multiplier = i.multiplier
-                i.value = cfg.value
+                i.value = self.get_config_value(i)
                 i.save()
                 if i.dependentChildren:
                     for each in i.dependentChildren:
@@ -436,11 +433,43 @@ class ConfigTree(ttk.Treeview):
 
                 self.insert('', 'end', iid=i.key, values = [i.key, i.name, i.value_text, i.units])
             except Exception as e:
-                print(e)
+                #print(e)
                 self.insert('', 'end', iid=i.key, values = [i.key, i.name, "-", ""])
-                raise(e)
+                #raise(e)
 
-    # TODO only set the dirty flag and tags when the value is different than what we read from the node
+
+    def set_config_value(self, record):
+        cfg = configNode.setNodeConfiguration(config.node, self.node.nodeid, record.key, record.datatype, record.multiplier, record.value)
+        if cfg.status == canfix.MSG_FAIL:
+            log.error("Unable to set configuration for key {}, error code = {}".format(record.key, cfg.errorCode))
+
+
+    def get_config_value(self, record):
+        cfg = configNode.queryNodeConfiguration(config.node, self.node.nodeid, record.key)
+        cfg.datatype = record.datatype
+        cfg.multiplier = record.multiplier
+        record.save()  # It's not dirty anymore
+        return cfg.value
+
+    # This reads all the record values from the node and updates the list
+    def refresh(self):
+        for i in self.records:
+            i.value = self.get_config_value(i)
+            self.set_value(i.key, i.value)
+
+    def send_config(self):
+        # Loop through all the records and send the dirty ones.
+        for i in self.records:
+            if i.dirty:
+                self.set_config_value(i)
+        # We need to refresh the list after writing because the node may change some
+        # configurations based on data that we send.  There may also be command words
+        # that get reset, etc.
+        self.refresh()
+
+
+    # Sets a value in the tree.  Makes sure that any dependent keys are changed if
+    # necessary.
     def set_value(self, recordKey, value):
         for i in self.records:
             if i.key == recordKey:
@@ -540,7 +569,7 @@ class ConfigDialog(tk.Toplevel):
 
     # send button callback.
     def btn_send(self):
-        print("Send")
+        self.treeView.send_config()
 
     def close_mod(self):
         # top right corner cross click: return value ;`x`;
@@ -553,6 +582,14 @@ if __name__ == "__main__":
 
 # TODO:
 #    Make the dialog default to the previous set of interface/arguments
+#    Set focus to the list on opening
 #    Dialog opening position and size
+#    Refresh button?
 #    On closing warn if there are dirty records
-#
+#    Display errors
+#    hot keys:
+#       Enter = Apply
+#       ESC = Close?
+#       Tab or something to jump to the config 
+#       ^s = Send
+

@@ -330,3 +330,6 @@ class App(tk.Tk):
 if __name__ == "__main__":
     app = App()
     app.run()
+
+# TODO:
+#    Add hot keys for menus and functions

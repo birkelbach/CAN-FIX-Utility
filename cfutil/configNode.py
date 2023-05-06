@@ -39,6 +39,32 @@ int_types = known_types[3:9]
 
 canbus = connection.canbus
 
+def setNodeConfiguration(sendNode, destNode, key, datatype, multiplier, value):
+    ncq = canfix.NodeConfigurationSet(key = key)
+    ncq.datatype = datatype
+    ncq.multiplier = multiplier
+    ncq.sendNode = sendNode
+    ncq.destNode = destNode
+    ncq.value = value
+
+    conn = canbus.get_connection()
+    conn.send(ncq.msg)
+    endtime = time.time() + 1.0
+    while(True):
+        try:
+            rmsg = conn.recv(timeout = 1.0)
+        except connection.Timeout:
+            canbus.free_connection(conn)
+            return None
+        p = canfix.parseMessage(rmsg)
+        if isinstance(p, canfix.NodeConfigurationSet) and p.destNode == sendNode:
+            canbus.free_connection(conn)
+            return p
+        else:
+            if time.time() > endtime:
+                canbus.free_connection(conn)
+                return None
+
 def queryNodeConfiguration(sendNode, destNode, key):
     ncq = canfix.NodeConfigurationQuery(key = key)
     conn = canbus.get_connection()
