@@ -54,6 +54,7 @@ class IntEntry(tk.Entry):
 
     @value.setter
     def value(self, v):
+        if v is None: v = 0
         self.text.set(str(int(v)))
 
 
@@ -85,6 +86,7 @@ class ListBox(ttk.Combobox):
     def value(self, v):
         for key, value in self.selections.items():
             if value == v:
+                print(key)
                 self.set(key)
         # If we don't have a match then ignore it.
 
@@ -251,7 +253,9 @@ class ConfigRecord():
 
     @property
     def value_text(self):
-        if self.input == 'list':
+        if self.value == None:
+            return "-" # If we get here then we didn't match anything but we need to do this.
+        elif self.input == 'list':
             for key, value in self.control.selections.items():
                 if value == self.value:
                     return key
@@ -270,11 +274,6 @@ class ConfigRecord():
                 return "{:016b}".format(self.value)
             else:
                 raise ValueError("select input must be BYTE or WORD")
-
-        if self.value == None:
-            return "-" # If we get here then we didn't match anything but we need to do this.
-        else:
-            return str(self.value) # temporary for now
 
 
     @property
@@ -372,7 +371,7 @@ class ConfigRecord():
     def widget(self, parent):
         input = self.input.lower()
         if input == "entry":
-            if self.datatype.upper() in configNode.int_types:
+            if self.datatype.upper() in (configNode.int_types + ["BYTE", "WORD"]):
                 self.__widget = IntEntry(parent)
             elif self.datatype.upper() == "FLOAT":
                 self.__widget = FloatEntry(parent)
@@ -392,7 +391,6 @@ class ConfigRecord():
 
         self.__widget.value = self.value
         return self.__widget
-
 
 
 
@@ -445,11 +443,17 @@ class ConfigTree(ttk.Treeview):
 
 
     def get_config_value(self, record):
-        cfg = configNode.queryNodeConfiguration(config.node, self.node.nodeid, record.key)
-        cfg.datatype = record.datatype
-        cfg.multiplier = record.multiplier
-        record.save()  # It's not dirty anymore
-        return cfg.value
+        try:
+            cfg = configNode.queryNodeConfiguration(config.node, self.node.nodeid, record.key)
+            if cfg != None:
+                cfg.datatype = record.datatype
+                cfg.multiplier = record.multiplier
+                record.save()  # It's not dirty anymore
+                return cfg.value
+            else:
+                return None
+        except:
+            return None
 
     # This reads all the record values from the node and updates the list
     def refresh(self):
@@ -556,7 +560,7 @@ class ConfigDialog(tk.Toplevel):
         for each in self.treeView.records:
             if each.key == item["values"][0]:
                 self.cfgWidget = each.widget(self.cfgFrame)
-                self.cfgWidget.grid(row=1,column=0, sticky=tk.E)
+                self.cfgWidget.grid(row=1,column=0, padx=4,sticky=tk.EW)
                 if each.units:
                     l = ttk.Label(self.cfgFrame, text = each.units)
                     l.grid(row=1, column=1, padx = 4, sticky=tk.W)
@@ -587,9 +591,10 @@ if __name__ == "__main__":
 #    Refresh button?
 #    On closing warn if there are dirty records
 #    Display errors
+#    Get rid of the Apply button and just apply changes as made
 #    hot keys:
 #       Enter = Apply
 #       ESC = Close?
-#       Tab or something to jump to the config 
+#       Tab or something to jump to the config
 #       ^s = Send
 

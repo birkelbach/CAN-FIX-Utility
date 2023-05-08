@@ -87,3 +87,6 @@ def findDevice(device, model, version):
         if each.deviceType == device and each.modelNumber == model:
             return each
     return None
+
+# TODO: Write a function to verify the configuration and other parts of the file.
+#          and some unit tests to test it all

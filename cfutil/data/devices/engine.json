@@ -5,24 +5,21 @@
   "version":"0x01",
   "firmware_code":"0xF22",
   "firmware_driver":"DUMMY",
-  "node_errors":
-    [
-      {
-        "description":"Firmware Checksum Failure"
-      },
-      {
-        "description":"Temperature Out of Range"
-      },
-      {
-        "description":"Voltage Out of Range"
-      }
-    ],
-  "status":
-    [
+  "node_errors": [
+    {
+      "description":"Firmware Checksum Failure"
+    },
+    {
+      "description":"Temperature Out of Range"
+    },
+    {
+      "description":"Voltage Out of Range"
+    }
+  ],
+  "status": [
       {"0x0100":""}
-    ],
-  "parameters":
-    [
+  ],
+  "parameters": [
       "0x200",
       "0x21A",
       "0x21C",
@@ -37,9 +34,8 @@
       "0x512",
       "0x50E",
       "0x520"
-    ],
-  "configuration":
-  [
+  ],
+  "configuration":[
     {
       "key":1,
       "name":"Update Rate",
@@ -53,7 +49,7 @@
       "key":2,
       "name":"Mode",
       "type":"UINT",
-      "input": "listbox",
+      "input": "list",
       "selections": {
         "Run": 0,
         "Config": 1,
@@ -73,14 +69,68 @@
       "key":4,
       "name":"Bitfield Test",
       "type":"BYTE",
-      "input": "bitfield",
+      "input": "select",
       "selections": {
         "Low Warning": 0,
         "Low Alarm": 1,
         "High Warning": 2,
         "High Alarm": 3
       }
-
+    },
+    {
+      "key":5,
+      "name":"Depend Select",
+      "type":"UINT",
+      "input": "list",
+      "selections": {
+        "First Selection": 0,
+        "Second Selection": 1,
+        "Third Selection": 2,
+        "Third Selection Again": 3
+      }
+    },
+    {
+    "key": 6,
+    "depends": {
+        "key": 5,
+        "definitions": [
+          {
+          "compare": 0,
+          "name": "First Select",
+          "type": "UINT",
+          "input": "list",
+          "selections": {
+              "Up": 0,
+              "Down": 1,
+              "Position 1": 2,
+              "Position 2": 3,
+              "Position 3": 4,
+              "Position 4": 5,
+              "Position 5": 6,
+              "Position 6": 7
+            }
+          },
+          {
+          "compare": 1,
+          "name": "Second Select",
+          "type": "UINT",
+          "input": "list",
+          "selections": {
+              "Switch 1": 1,
+              "Switch 2": 2,
+              "Switch 3": 3,
+              "Switch 4": 4
+            }
+          },
+          {
+          "compare": [2,3],
+          "name": "Third Select",
+          "type": "SHORT",
+          "min": 0,
+          "max": 16
+          }
+        ]
+      }
     }
   ]
 }
