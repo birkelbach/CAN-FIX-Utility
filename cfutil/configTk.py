@@ -86,7 +86,6 @@ class ListBox(ttk.Combobox):
     def value(self, v):
         for key, value in self.selections.items():
             if value == v:
-                print(key)
                 self.set(key)
         # If we don't have a match then ignore it.
 
@@ -583,18 +582,4 @@ class ConfigDialog(tk.Toplevel):
 
 if __name__ == "__main__":
     pass
-
-# TODO:
-#    Make the dialog default to the previous set of interface/arguments
-#    Set focus to the list on opening
-#    Dialog opening position and size
-#    Refresh button?
-#    On closing warn if there are dirty records
-#    Display errors
-#    Get rid of the Apply button and just apply changes as made
-#    hot keys:
-#       Enter = Apply
-#       ESC = Close?
-#       Tab or something to jump to the config
-#       ^s = Send
 

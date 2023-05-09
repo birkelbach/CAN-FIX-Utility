@@ -66,14 +66,23 @@ class Node():
         self.__model = None
         self.name = "Unknown Device"
         self.__device = None
+        self.__description = bytearray([0]*256)
+        self.status = 0
         self.laststatus = None
         self.lastupdate = time.time()
         self.userdata = {}
 
+    # this function is meant to receive the packet number and four character bytes
+    # of a node description message.
+    def set_description(self, packet_num, bytes):
+        # TODO Deal with growing the thing if necessary.
+        index = packet_num*4
+        self.__description[index:index+4] = bytes
+
     @property
     def deviceid(self):
         return self.__deviceid
-    
+
     @deviceid.setter
     def deviceid(self, v):
         self.__deviceid = v
@@ -84,7 +93,7 @@ class Node():
     @property
     def version(self):
         return self.__version
-    
+
     @version.setter
     def version(self, v):
         self.__version = v
@@ -98,7 +107,7 @@ class Node():
             return hex(self.__model).lstrip('0x').upper()
         else:
             return None
-    
+
     @model.setter
     def model(self, v):
         self.__model = v
@@ -112,13 +121,24 @@ class Node():
     @property
     def device(self):
         return self.__device
-    
+
     @device.setter
     def device(self, d):
         if d is not None:
             self.name = d.name
             self.__device = d
-    
+
+    @property
+    def description(self):
+        return self.__description.decode('ascii')
+
+    @property
+    def status_str(self):
+        if self.status == 0:
+            return "OK"
+        else:
+            return f"Error {self.status}"
+
 
 class NodeThread(Thread):
     def __init__(self):
@@ -134,7 +154,7 @@ class NodeThread(Thread):
         self.__add_parameter_callback = None
         self.__del_parameter_callback = None
         self.__update_parameter_callback = None
-    
+
 
     def __add_node(self, nodeid, sendid=True):
         self.nodelist[nodeid] = Node(nodeid)
@@ -146,18 +166,18 @@ class NodeThread(Thread):
             self.conn.send(nid.msg)
         if self.__add_node_callback is not None:
             self.__add_node_callback(self.nodelist[nodeid])
-        
+
 
     def set_node_callbacks(self, add, delete, update):
         self.__add_node_callback = add
         self.__del_node_callback = delete
         self.__update_node_callback = update
-    
+
     def set_parameter_callbacks(self, add, delete, update):
         self.__add_parameter_callback = add
         self.__del_parameter_callback = delete
         self.__update_parameter_callback = update
-    
+
 
     # This takes the message and deals with it.  It handles creating nodes and parameters
     # if needed as well as updating
@@ -173,7 +193,10 @@ class NodeThread(Thread):
                 x.deviceid = msg.device
                 x.version = msg.fwrev
                 x.model = msg.model
-                
+        elif isinstance(msg, canfix.NodeDescription):
+            if self.nodelist[msg.sendNode] == None:
+                self.__add_node(msg.sendNode, sendid = False)
+            self.nodelist[msg.sendNode].set_description(msg.packetnumber, msg.chars)
         elif isinstance(msg, canfix.NodeStatus):
             if self.nodelist[msg.sendNode] == None:
                 self.__add_node(msg.sendNode)
@@ -181,7 +204,8 @@ class NodeThread(Thread):
                 self.nodelist[msg.sendNode].update()
                 if self.__update_node_callback is not None:
                         self.__update_node_callback(self.nodelist[msg.sendNode])
-                #TODO update all the status if the device is defined
+            if msg.controlCode == 0: # Status
+                self.nodelist[msg.sendNode].status = msg.value
         elif isinstance(msg, canfix.Parameter):
             # If we don't already have this parameter then add it
             pid = (msg.identifier, msg.index)
@@ -199,7 +223,7 @@ class NodeThread(Thread):
             # If it's already there then we can update the time
             else:
                 self.nodelist[msg.node].update()
-    
+
     # This loops through everything and makes sure we're all goo
     # it'll delete nodes and paramters if they have not been updated
     # in time
@@ -216,7 +240,7 @@ class NodeThread(Thread):
         # through the loop.
         del_list = []
         for k in self.parameterlist:
-            if now > self.parameterlist[k].lastupdate + 5:    
+            if now > self.parameterlist[k].lastupdate + 5:
                 if self.__del_parameter_callback is not None:
                     self.__del_parameter_callback(self.parameterlist[k])
                 del_list.append(k)
@@ -242,7 +266,7 @@ class NodeThread(Thread):
             if thisscan > lastscan + 2:
                 self.checkall()
                 lastscan = thisscan
-                
+
 
 
     def stop(self):

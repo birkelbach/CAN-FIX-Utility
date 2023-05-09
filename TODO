@@ -1,10 +1,26 @@
-Add navigation buttons functions to dialogs.  Mostly enter and escape.
+Main Screen:
+  Add hot keys for menus and functions
+  Add error pop up dialogs
+  Add more to status bar... Status LED indicators, message counts etc
+
+Config Dialog:
+  Add hot keys for each function
+  Git rid of the Apply button and save on changes
+  Warn user when closing dialog with un-sent (dirty changes)
+
+Node Information:
+  Node Status Error strings if in EDS file
+  Node Status Values if in EDS file
+  Add Parameters to Information
+  Add Update on timer or button?
+
+Add navigation hot keys functions to dialogs.  Mostly enter and escape.
 
 Enable / Disable parameters
 
 Write to file from traffic tab
 
-Add Connection status to the status bar.  Something like a blinking green light
+Improve Connection status on the status bar.  Something like a blinking green light
 or frame counter.
 
 Connect dialog box needs to pre-set itself to the last used or configured
@@ -22,11 +38,8 @@ online help?
 Save and restore configuration to nodes.  Probably use json.  Also add a
 "Save Entire Network Configuration" menu item.
 
-Firmware updating has some problems:  REDO THIS
-
-  Test Firmware download on real hardware.
-
-  Firmware download for 'unknown' devices
+Overhaul Firmware updating.  Allow updating firmware for unknown nodes and
+especially make sure it works from the command line.
 
 Global configuration for our node number
 
@@ -41,3 +54,5 @@ Method to send certain parameters from the Utility.  Perhaps some kind of custom
 page that we could use to send test information.  Configurable with json files maybe?
 
 Save settings to disk somehow.  Probably use the ini file?
+
+

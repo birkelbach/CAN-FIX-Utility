@@ -25,6 +25,7 @@ from . import nodes
 from . import connection
 from .connectTk  import ConnectDialog
 from .configTk  import ConfigDialog
+from .infoTk import InfoDialog
 import tkinter as tk
 import tkinter.ttk as ttk
 import queue
@@ -198,7 +199,8 @@ class App(tk.Tk):
         parent = self.nodeview.parent(curItem)
         item = self.nodeview.item(curItem)
         if parent != "":
-            node = parent
+            node = int(parent)
+            print(node)
         else:
             if item['values']:
                 node = item['values'][0]
@@ -216,9 +218,12 @@ class App(tk.Tk):
         if tab['text'] == "Nodes":
             node = self.__get_current_node()
             if node is not None:
-                print("Information Node {}".format(node))
+                id = InfoDialog(self, self.nt.nodelist[node])
+                id.mainloop()
+                id.destroy()
             else:
-                print("No Node Selected")
+                log.error("No Node Selected")
+                # TODO Error Pop Up
         elif tab['text'] == "Parameters":
             item = self.__get_current_parameter()
             if item['values']:
@@ -270,10 +275,12 @@ class App(tk.Tk):
             print("No Node Selected")
 
     def node_select(self, event):
-        self.show_information()
+        pass
+        #self.show_information()
 
     def parameter_select(self, event):
-        self.show_information()
+        pass
+        #self.show_information()
 
     # TODO instead of all this queue crap we need to use custom virtual events.
     def manager(self):
@@ -330,6 +337,3 @@ class App(tk.Tk):
 if __name__ == "__main__":
     app = App()
     app.run()
-
-# TODO:
-#    Add hot keys for menus and functions
