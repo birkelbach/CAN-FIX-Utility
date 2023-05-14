@@ -142,11 +142,24 @@ addressed in this manner.  Again this is arbitrary as long as the host and the
 node are in agreement.
 
 The *Block Size* field indicates how much data the Node should expect in this
-block before receiving a Block End Frame.  A block can be between 1 and 256
-bytes long.  A zero in this field represents a block size of 1.  A 255 in this
-field would mean a block size of 256.  Simply put, the Node should add a 1 to the
-value of this field to determine how many bytes to expect.  It can be thought of
-as the index of the last byte.
+block before receiving a Block End Frame.  The block size is given as a power
+of two.  Examples of some block sizes are given in the following table.
+
+.. tabularcolumns:: |c|p{2cm}|
+.. table:: Block Size Eamples
+
+  ============    ===============
+  Value Passed    Block Size
+  ============    ===============
+  0               1
+  1               2
+  2               4
+  3               8
+  4               16
+  5               32
+  10              1024 (1k)
+  11              2048 (2k)
+  ============    ===============
 
 The last four fields are the destination address of the block.  4 GiB can be
 addressed with this protocol.  The address is sent least significant byte first.

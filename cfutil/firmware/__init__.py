@@ -28,12 +28,12 @@ def Firmware(driver, filename, node, vcode, conn):
     if driver == "AT328":
         from . import AVR8
         d = AVR8.Driver(filename, node, vcode, conn)
-        d.setArg("blocksize", 128)
+        d["blocksize"] = 128
         return d
     elif driver == "AT2561":
         from . import AVR8
         d = AVR8.Driver(filename, node, vcode, conn)
-        d.setArg("blocksize", 256)
+        d["blocksize"] = 256
         return d
     elif driver == "DUMMY":
         from . import DUMMY

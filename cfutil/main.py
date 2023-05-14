@@ -82,6 +82,7 @@ def main():
         from . import mainTk
         app = mainTk.App(None)
         app.run()
+
     connection.canbus.stop()
     connection.canbus.join()
 

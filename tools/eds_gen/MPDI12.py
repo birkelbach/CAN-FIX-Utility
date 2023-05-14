@@ -31,6 +31,14 @@ d =  {
   "version":"0x01",
   "firmware_code":"0xF23",
   "firmware_driver":"STM32",
+  "node_status_errors": {
+      0:"Firmware Checksum Failure",
+      1:"Temperature Out of Range",
+      2:"Voltage Out of Range"
+  },
+  "node_status": {
+      int("0x0100", base=16):""
+   },
   "parameters":
     [
       int("0x101", base=16),

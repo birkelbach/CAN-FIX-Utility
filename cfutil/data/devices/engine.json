@@ -5,17 +5,11 @@
   "version":"0x01",
   "firmware_code":"0xF22",
   "firmware_driver":"DUMMY",
-  "node_errors": [
-    {
-      "description":"Firmware Checksum Failure"
-    },
-    {
-      "description":"Temperature Out of Range"
-    },
-    {
-      "description":"Voltage Out of Range"
-    }
-  ],
+  "node_errors": {
+      "1":"Firmware Checksum Failure",
+      "2":"Temperature Out of Range",
+      "3":"Voltage Out of Range"
+  },
   "status": [
       {"0x0100":""}
   ],

@@ -40,9 +40,20 @@ class Driver(FirmwareBase):
         self.blocksize = 128
         self.__currentblock = 0
 
-    def setArg(self, argname, value):
-        if argname == "blocksize":
+    # These are overriding the base class indexing methods
+    # This is so that we can use the Driver["blocksize"]
+    # mechanism for accessing this argument
+    def __getitem__(self, idx):
+        if idx == "blocksize":
+            return self.blocksize
+        else:
+            raise IndexError
+
+    def __setitem__(self, idx, value):
+        if idx == "blocksize":
             self.blocksize = value
+        else:
+            raise IndexError
 
     # .blocksize property
     def setBlocksize(self, value):

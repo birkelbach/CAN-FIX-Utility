@@ -34,6 +34,7 @@ class FirmwareBase:
         self.destNode = node
         self.firmwareCode = vcode
         self.can = conn
+        self.args = {}
 
         # kill when set to True should stop downloads
         self.kill = False
@@ -43,6 +44,15 @@ class FirmwareBase:
         self.__statusCallback = None
         self.__progressCallback = None
         self.__stopCallback = None
+
+    def __getitem__(self, idx):
+        return self.args[idx]
+
+    def __setitem__(self, idx, val):
+        if idx in self.args:
+            self.args[idx] = val
+        else:
+            raise IndexError
 
     def setProgressCallback(self, progress):
         if isinstance(progress, collections.abc.Callable):

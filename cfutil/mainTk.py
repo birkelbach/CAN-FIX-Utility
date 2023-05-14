@@ -26,6 +26,7 @@ from . import connection
 from .connectTk  import ConnectDialog
 from .configTk  import ConfigDialog
 from .infoTk import InfoDialog
+from .firmwareTk import FirmwareDialog
 import tkinter as tk
 import tkinter.ttk as ttk
 import queue
@@ -117,7 +118,7 @@ class App(tk.Tk):
         self.node_menu.add_command(label='Information...', underline=0, command=self.show_information)
         self.node_menu.add_command(label='Configure Node...', underline=1, command=self.configure_node)
         self.node_menu.add_separator()
-        self.node_menu.add_command(label='Update Firmware...', underline=0)
+        self.node_menu.add_command(label='Update Firmware...', underline=0, command=self.load_firmware)
         if connection.canbus.connected:
             self.node_menu.entryconfig('Connect...', state='disabled')
         else:
@@ -273,6 +274,21 @@ class App(tk.Tk):
             cd.destroy()
         else:
             print("No Node Selected")
+
+    def load_firmware(self):
+        tab = self.nb.tab('current')
+        node = None
+        if tab['text'] == "Nodes":
+            node = self.__get_current_node()
+        elif tab['text'] == "Parameters":
+            item = self.__get_current_parameter()
+            if item['values']:
+                node = item['values'][0]
+
+        fd = FirmwareDialog(self, self.nt.nodelist, node)
+        fd.mainloop()
+        fd.destroy()
+
 
     def node_select(self, event):
         pass
