@@ -126,6 +126,7 @@ The following table shows some suggested block types.
   0x12          Secondary CPU Processor Configuration Memory
   0x13          Secondary CPU External Program Memory
   0x14          Secondary CPU External Data Memory
+  0xFC          Reserved for Previous Block Checksum
   0xFD          Reserved for End of Transmission Indication
   0xFE          Reserved for Abort Transmission Indication
   0xFF          Reserved for Error Indications
@@ -243,6 +244,27 @@ multiple Block End Frame messages on the bus to keep the channel alive while the
 node writes the data to the final location.  Although it seems unlikely that a
 node would need more than 500 mS to write that data to the final location it is
 possible so this mechanism is provided.
+
+Block Checksum
+**************
+
+If appropriate for the application, the host can follow the block with an
+indication of what the checksum for the block should be.
+
+.. tabularcolumns:: |c|p{2cm}|
+.. table:: Previous Block Checksum
+
+  ====    ===============
+  Byte    Data
+  ====    ===============
+  0       0xFC
+  1-4     Checksum
+  ====    ===============
+
+The type of checksum is outside the scope of this specification.  It can be
+up to four bytes and should be sent LSB first.  This frame should be sent
+immediately following the *Block End Frame* for each block that is sent.
+
 
 Ending the Transmission
 ***********************

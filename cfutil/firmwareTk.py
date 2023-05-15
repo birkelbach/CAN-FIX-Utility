@@ -25,9 +25,20 @@ from . import firmware
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import filedialog
-
+from tkinter import messagebox
+import threading
 
 log = logging.getLogger(__name__)
+
+class FirmwareThread(threading.Thread):
+    def __init__(self, fw):
+        super(FirmwareThread, self).__init__()
+        self.fw = fw
+
+    def run(self):
+        self.fw.download()
+
+
 
 # each of these classes is a specific tkinter widget that handles
 # retrieving the specific type of information.  The value property
@@ -71,9 +82,6 @@ class NodeSelect(ttk.Combobox):
         except:
            self.set("")
 
-
-
-
 class TextEntry(tk.Entry):
     def __init__(self, parent, *args, **kwargs):
         tk.Entry.__init__(self, parent, *args, **kwargs)
@@ -98,8 +106,11 @@ class FirmwareDialog(tk.Toplevel):
     def __init__(self, parent, nodelist, node, *args, **kwargs):
         tk.Toplevel.__init__(self, parent, *args, **kwargs)
         self.title("CANFiX Configuration Utility - Upload Firmware")
+        self.bind("<<ProgressUpdate>>", self.progress_update)
+        self.bind("<<StatusUpdate>>", self.status_update)
         self.nodelist = nodelist
         self.node = node
+        self.uploading = False
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
@@ -154,13 +165,24 @@ class FirmwareDialog(tk.Toplevel):
         brownsebtn = ttk.Button(mainframe, text="Browse", command=self.get_filename)
         brownsebtn.grid(row=4, column=2, padx=2, pady=2, sticky=tk.E)
 
-
+        # Download Progress Frame
+        f = ttk.Frame(mainframe)
+        f['borderwidth'] = 1
+        f['relief'] = 'sunken'
+        f.grid_rowconfigure(0, weight=1)
+        f.grid_columnconfigure(0, weight=1)
+        f.grid(row=5, column=0, pady = 2, padx = 2, columnspan=3, sticky=tk.NSEW)
+        self.progressLabel = tk.Label(f, text="Waiting...")
+        self.progressLabel.grid(row=0, column=0, sticky=tk.W)
+        self.progressVariable = tk.IntVar()
+        self.progressBar = ttk.Progressbar(f, orient='horizontal', length='300', mode='determinate', variable=self.progressVariable)
+        self.progressBar.grid(row=1, column=0, sticky=tk.EW)
 
         # cancel and ok buttons
         btn1 = ttk.Button(buttonframe, text="Close", command=self.close_mod)
         btn1.grid(row=0, column=0, padx=2, pady=2, sticky=tk.SE)
-        btn2 = ttk.Button(buttonframe, text="Upload", command=self.btn_upload)
-        btn2.grid(row=0, column=1, padx=2, pady=2, sticky=tk.SE)
+        self.uploadButton = ttk.Button(buttonframe, text="Upload", command=self.btn_upload)
+        self.uploadButton.grid(row=0, column=1, padx=2, pady=2, sticky=tk.SE)
 
         self.protocol("WM_DELETE_WINDOW", self.close_mod)
         self.grab_set() # makes the dialog modal
@@ -173,6 +195,15 @@ class FirmwareDialog(tk.Toplevel):
             self.driverselect.set(node.device.fwDriver)
             self.codetext.set(node.device.fwUpdateCode)
 
+    # We use these two events because the firmware is being downloaded in
+    # another thread.
+    def progress_update(self, e):
+        self.progressVariable.set(int(self.fw.progress*100))
+        if self.fw.progress >= 1.0:
+            self.downloadStoppedCallback()
+
+    def status_update(self, e):
+        self.progressLabel.configure(text = self.fw.status)
 
     def get_filename(self):
         filetypes = (
@@ -185,15 +216,42 @@ class FirmwareDialog(tk.Toplevel):
                                               filetypes=filetypes)
         self.filename.set(filename)
 
+    # Since these are called from another thread we have to use the
+    # virtual event.
+    def downloadStatusCallback(self, s):
+        self.event_generate("<<StatusUpdate>>")
+
+    def downloadProgressCallback(self, p):
+        self.event_generate("<<ProgressUpdate>>")
+
+    def downloadStoppedCallback(self):
+        self.fwThread.join(timeout=1.0)
+        connection.canbus.free_connection(self.fw.can)
+        self.uploadButton.configure(command = self.btn_upload, text = "Upload")
+        self.uploading = False
+
     # upload button callback.  Launch the firmware thread and disable the upload button
     def btn_upload(self):
-        print(self.nodeselect.value)
+        conn = connection.canbus.get_connection()
+        self.fw = firmware.Firmware(self.driverselect.get(), self.filename.get(), self.nodeselect.value, self.codetext, conn)
+        self.fw.setStatusCallback(self.downloadStatusCallback)
+        self.fw.setProgressCallback(self.downloadProgressCallback)
+        self.fw.setStopCallback(self.downloadStoppedCallback)
+        self.fwThread = FirmwareThread(self.fw)
+        self.fwThread.start()
+        self.uploadButton.configure(command = self.btn_cancel, text = "Cancel")
+        self.uploading = True
+
+    def btn_cancel(self):
+        self.fw.stop()
 
     def close_mod(self):
         # top right corner cross click: return value ;`x`;
         # we need to send it a value, otherwise there will be an exception when closing parent window
-        self.returning = ";`x`;"
-        self.quit()
+        if not self.uploading:
+            # Check the status of a firmware download.
+            self.returning = ";`x`;"
+            self.quit()
 
 if __name__ == "__main__":
     pass

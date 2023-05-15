@@ -4,7 +4,7 @@
     "model": "0x770001",
     "version": "0x01",
     "firmware_code": "0xF23",
-    "firmware_driver": "STM32",
+    "firmware_driver": "BASIC",
     "parameters": [
         257,
         258,

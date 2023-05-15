@@ -23,20 +23,25 @@ import argparse
 
 #from . import common as fw
 from .common import *
+from .stdfile import *
 
 def Firmware(driver, filename, node, vcode, conn):
     if driver == "AT328":
-        from . import AVR8
+        from .drivers import AVR8
         d = AVR8.Driver(filename, node, vcode, conn)
         d["blocksize"] = 128
         return d
     elif driver == "AT2561":
-        from . import AVR8
+        from .drivers import AVR8
         d = AVR8.Driver(filename, node, vcode, conn)
         d["blocksize"] = 256
         return d
+    elif driver == "BASIC":
+        from .drivers import BASIC
+        d = BASIC.Driver(filename, node, vcode, conn)
+        return d
     elif driver == "DUMMY":
-        from . import DUMMY
+        from .drivers import DUMMY
         return DUMMY.Driver(filename, node, vcode, conn)
     else:
         raise FirmwareError("No such driver")
@@ -44,6 +49,7 @@ def Firmware(driver, filename, node, vcode, conn):
 def GetDriverList():
     return {"AT328":"ATmega328",
             "AT2561":"Atmega2561",
+            "BASIC":"Basic Standard Driver",
             "DUMMY":"Test Driver"}
 
 # def config():

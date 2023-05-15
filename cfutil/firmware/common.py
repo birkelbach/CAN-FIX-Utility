@@ -33,6 +33,8 @@ class FirmwareBase:
         self.filename = filename
         self.destNode = node
         self.firmwareCode = vcode
+        self.status = ""
+        self.progress = 0.0
         self.can = conn
         self.args = {}
 
@@ -75,12 +77,14 @@ class FirmwareBase:
     def sendStatus(self, status):
         """Function used by this object to test that the callback
             has been set and if so call it"""
+        self.status = status
         if self.__statusCallback:
             self.__statusCallback(status)
 
     def sendProgress(self, progress):
         """Function used by this object to test that the callback
            has been set and if so call it"""
+        self.progress = float(progress)
         if self.__progressCallback:
             self.__progressCallback(progress)
 

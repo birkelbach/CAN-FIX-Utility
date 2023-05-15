@@ -18,10 +18,10 @@
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 from intelhex import IntelHex
-from . import crc
+from .. import crc
 import time
 import can
-from . import FirmwareBase
+from .. import FirmwareBase
 from cfutil import connection
 
 

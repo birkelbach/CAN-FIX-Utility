@@ -1,4 +1,4 @@
-from . import FirmwareBase
+from .. import FirmwareBase
 from intelhex import IntelHex
 import can
 from canfix.globals import TWOWAY_CONN_CHANS
@@ -47,7 +47,7 @@ class STM32Firmware(FirmwareBase):
 
   def update_fw(self):
     self.start_download()  # This will set self.channel
-        
+
     # Erase necessary sectors
     for sect in self.__sectors_used():
       self.__send_recv([sect], 0x1)
@@ -58,7 +58,7 @@ class STM32Firmware(FirmwareBase):
     for ns, (start_addr, stop_addr) in enumerate(self._ih.segments()):
       print(f"Segment {ns+1} of {len(self._ih.segments())}")
       self.__send_recv(struct.pack('II', start_addr, stop_addr - start_addr), 0x3)
-      
+
       # Send data
       for n in tqdm.tqdm(list(range(start_addr, stop_addr-8, 8))):
         self.__send_recv(bytearray([self._ih[xx] for xx in range(n,n+8)]), 0x4)
@@ -67,7 +67,7 @@ class STM32Firmware(FirmwareBase):
 
     # Send addr 0, 0 to state we're done.
     self.__send_recv(struct.pack('II', 0, 0), 0x6)
-    
+
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(epilog="Run within the first 10 seconds of AHRS powerup.")

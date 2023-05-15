@@ -19,24 +19,13 @@
 
 # This is a fake firmware driver that is just used for testing
 
-from intelhex import IntelHex
-from . import crc
-from .common import FirmwareBase
+from .. import crc
+from ..common import FirmwareBase
 import time
 
 class Driver(FirmwareBase):
     def __init__(self, filename, node, vcode, conn):
         FirmwareBase.__init__(self, filename, node, vcode, conn)
-
-        self.__ih = IntelHex()
-        self.__ih.loadhex(filename)
-
-        cs = crc.crc16()
-        for each in range(self.__ih.minaddr(), self.__ih.maxaddr()+1):
-            cs.addByte(self.__ih[each])
-        self.__size = self.__ih.maxaddr()+1
-        self.__checksum = cs.getResult()
-
 
     def download(self):
         progress = 0.0
@@ -49,6 +38,6 @@ class Driver(FirmwareBase):
             time.sleep(0.1)
             self.sendProgress(progress)
             progress = progress + 0.01
-            if progress > 1: break
+            if progress >= 1: break
         self.sendProgress(1.0)
         self.sendStatus("Download Successful")
