@@ -18,6 +18,7 @@
 import time
 import logging
 import canfix
+from .. import config
 import collections
 from cfutil import connection
 
@@ -42,7 +43,10 @@ class FirmwareBase:
         self.kill = False
 
         # This is our node number
-        self.srcNode = 0xFF #0xFF is the default for configuration software
+        if config.node is not None:
+            self.srcNode = int(config.node)
+        else:
+            self.srcNode = 0xFF #0xFF is the default for configuration software
         self.__statusCallback = None
         self.__progressCallback = None
         self.__stopCallback = None
@@ -104,7 +108,6 @@ class FirmwareBase:
             try:
                 rframe = self.can.recv(0.1)
                 if rframe is not None:
-                    #print("***ch detect", rframe.error_state_indicator)
                     msg = canfix.parseMessage(rframe)
                     if isinstance(msg, canfix.TwoWayConnection):
                         self.channels[msg.channel] = 1
@@ -126,8 +129,6 @@ class FirmwareBase:
         self.channel = self.__getFreeChannel()
         if self.channel < 0:
             raise FirmwareError("No Free Channel")
-        #print("Channel found:", self.channel)
-        print("self.firmwareCode = {}".format(self.firmwareCode))
         msg = canfix.UpdateFirmware(node=self.destNode, verification=self.firmwareCode, channel=self.channel)
         msg.sendNode = self.srcNode
         msg.msgType = canfix.MSG_REQUEST
@@ -143,7 +144,6 @@ class FirmwareBase:
 
             if rframe != None:
                 msg = canfix.parseMessage(rframe, silent=True)
-                #print("****", rframe, rframe.is_error_frame)
                 if isinstance(msg, canfix.UpdateFirmware):
                     if msg.destNode == self.srcNode:
                         if msg.status == canfix.MSG_SUCCESS:
@@ -165,5 +165,4 @@ class FirmwareBase:
             self.sendStatus("Download Attempt " + str(attempt))
             attempt += 1
             if self.__tryFirmwareReq(): break
-        # This should be definied in the child and be specific for each driver
-        #self.download()
+

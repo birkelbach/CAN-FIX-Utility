@@ -34,9 +34,14 @@ class FirmwareThread(threading.Thread):
     def __init__(self, fw):
         super(FirmwareThread, self).__init__()
         self.fw = fw
+        self.error = ""
 
     def run(self):
-        self.fw.download()
+        try:
+            self.fw.download()
+        except firmware.FirmwareError as e:
+            log.error(e)
+            self.error = str(e)
 
 
 
@@ -106,8 +111,6 @@ class FirmwareDialog(tk.Toplevel):
     def __init__(self, parent, nodelist, node, *args, **kwargs):
         tk.Toplevel.__init__(self, parent, *args, **kwargs)
         self.title("CANFiX Configuration Utility - Upload Firmware")
-        self.bind("<<ProgressUpdate>>", self.progress_update)
-        self.bind("<<StatusUpdate>>", self.status_update)
         self.nodelist = nodelist
         self.node = node
         self.uploading = False
@@ -195,15 +198,21 @@ class FirmwareDialog(tk.Toplevel):
             self.driverselect.set(node.device.fwDriver)
             self.codetext.set(node.device.fwUpdateCode)
 
-    # We use these two events because the firmware is being downloaded in
-    # another thread.
-    def progress_update(self, e):
-        self.progressVariable.set(int(self.fw.progress*100))
-        if self.fw.progress >= 1.0:
-            self.downloadStoppedCallback()
-
-    def status_update(self, e):
+    # Called periodically during the download to update the status
+    # and the progress
+    def update(self):
         self.progressLabel.configure(text = self.fw.status)
+        self.progressVariable.set(int(self.fw.progress*100))
+        if self.fwThread.error:
+            #messagebox.showerror("Firmware Problem", self.fwThread.error)
+            self.downloadEnded()
+            self.progressLabel.configure(text = self.fwThread.error)
+            self.progressVariable.set(0)
+        if self.uploading:
+            self.after(100, self.update)
+        if self.fw.progress >= 1.0:
+            self.downloadEnded()
+
 
     def get_filename(self):
         filetypes = (
@@ -216,31 +225,24 @@ class FirmwareDialog(tk.Toplevel):
                                               filetypes=filetypes)
         self.filename.set(filename)
 
-    # Since these are called from another thread we have to use the
-    # virtual event.
-    def downloadStatusCallback(self, s):
-        self.event_generate("<<StatusUpdate>>")
-
-    def downloadProgressCallback(self, p):
-        self.event_generate("<<ProgressUpdate>>")
-
-    def downloadStoppedCallback(self):
-        self.fwThread.join(timeout=1.0)
-        connection.canbus.free_connection(self.fw.can)
-        self.uploadButton.configure(command = self.btn_upload, text = "Upload")
-        self.uploading = False
+    # Cleans up after the download is over.  Also the stop callback from the firmware driver
+    def downloadEnded(self):
+        if self.uploading: # This will keep us from doing this twice
+            self.fwThread.join(timeout=1.0)
+            connection.canbus.free_connection(self.fw.can)
+            self.uploadButton.configure(command = self.btn_upload, text = "Upload")
+            self.uploading = False
 
     # upload button callback.  Launch the firmware thread and disable the upload button
     def btn_upload(self):
         conn = connection.canbus.get_connection()
-        self.fw = firmware.Firmware(self.driverselect.get(), self.filename.get(), self.nodeselect.value, self.codetext, conn)
-        self.fw.setStatusCallback(self.downloadStatusCallback)
-        self.fw.setProgressCallback(self.downloadProgressCallback)
-        self.fw.setStopCallback(self.downloadStoppedCallback)
+        self.fw = firmware.Firmware(self.driverselect.get(), self.filename.get(), self.nodeselect.value, int(self.codetext.get()), conn)
+        self.fw.setStopCallback(self.downloadEnded)
         self.fwThread = FirmwareThread(self.fw)
         self.fwThread.start()
         self.uploadButton.configure(command = self.btn_cancel, text = "Cancel")
         self.uploading = True
+        self.after(100, self.update)
 
     def btn_cancel(self):
         self.fw.stop()

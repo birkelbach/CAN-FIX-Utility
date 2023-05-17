@@ -65,6 +65,7 @@ coverage.xml
 *.pot
 
 *.log
-
+# Firmware files
+*.cfw
 # Sphinx documentation
 docs/_build/

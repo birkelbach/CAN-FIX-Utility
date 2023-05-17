@@ -262,7 +262,6 @@ class NodeThread(Thread):
                 pass
             except Exception as e:
                 log.error(e)
-                time.sleep(0.5)
             if thisscan > lastscan + 2:
                 self.checkall()
                 lastscan = thisscan

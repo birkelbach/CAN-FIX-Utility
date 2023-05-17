@@ -126,7 +126,6 @@ The following table shows some suggested block types.
   0x12          Secondary CPU Processor Configuration Memory
   0x13          Secondary CPU External Program Memory
   0x14          Secondary CPU External Data Memory
-  0xFC          Reserved for Previous Block Checksum
   0xFD          Reserved for End of Transmission Indication
   0xFE          Reserved for Abort Transmission Indication
   0xFF          Reserved for Error Indications
@@ -142,9 +141,18 @@ be used to differentiate between these.  Multiple Secondary CPUs could also be
 addressed in this manner.  Again this is arbitrary as long as the host and the
 node are in agreement.
 
-The *Block Size* field indicates how much data the Node should expect in this
-block before receiving a Block End Frame.  The block size is given as a power
-of two.  Examples of some block sizes are given in the following table.
+The *Block Size* field indicates the maximum amount of data the Node should expect in this
+block before receiving a Block End Frame.  The block size is sent as the log2 of the
+actual block size.  Examples of some block sizes are given in the following table.  This
+requires that the blocksize must be an even power of 2.  Any other value will be an error.
+Blocks that are smaller than the block size may be recieved because the size of the firmware
+file may not be an exact multiple of the block size.
+
+The maximum value for the *Block Size* field is 31.
+
+The primary reason for sending a block size is so the receiving node can allocate memory
+appropriately and return errors before we begin sending.
+
 
 .. tabularcolumns:: |c|p{2cm}|
 .. table:: Block Size Eamples
@@ -160,7 +168,11 @@ of two.  Examples of some block sizes are given in the following table.
   5               32
   10              1024 (1k)
   11              2048 (2k)
+  31              2 Gb
   ============    ===============
+
+The upper 3 bits of the *Block Size* field are not used and are reserved for
+future use.
 
 The last four fields are the destination address of the block.  4 GiB can be
 addressed with this protocol.  The address is sent least significant byte first.
@@ -219,7 +231,10 @@ is to respond with a *Data Acknowledge Frame*.
   ====    ===============
   Byte    Data
   ====    ===============
-  0       Offset
+  0       Offset0
+  1       Offset8
+  2       Offset16
+  3       Offset24
   ====    ===============
 
 The offset is the offset within the block as calculated by the node.  So the
@@ -244,27 +259,6 @@ multiple Block End Frame messages on the bus to keep the channel alive while the
 node writes the data to the final location.  Although it seems unlikely that a
 node would need more than 500 mS to write that data to the final location it is
 possible so this mechanism is provided.
-
-Block Checksum
-**************
-
-If appropriate for the application, the host can follow the block with an
-indication of what the checksum for the block should be.
-
-.. tabularcolumns:: |c|p{2cm}|
-.. table:: Previous Block Checksum
-
-  ====    ===============
-  Byte    Data
-  ====    ===============
-  0       0xFC
-  1-4     Checksum
-  ====    ===============
-
-The type of checksum is outside the scope of this specification.  It can be
-up to four bytes and should be sent LSB first.  This frame should be sent
-immediately following the *Block End Frame* for each block that is sent.
-
 
 Ending the Transmission
 ***********************

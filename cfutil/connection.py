@@ -23,6 +23,7 @@
 
 import threading
 import logging
+import time
 import can
 import queue
 import cfutil.config as config
@@ -74,6 +75,22 @@ class Connection:
                 return self.recvQueue.get(block=True, timeout=timeout)
         except queue.Empty:
             raise Timeout()
+
+    # Convienience Function for sending on a channel
+    def channel_send(self, ch, data):
+        sframe = can.Message(arbitration_id = 0x7E0 + ch * 2, is_extended_id =False, data=data)
+        self.send(sframe)
+
+    def channel_recv(self, ch, timeout = 1.0):
+        start = time.time()
+        while True:
+            rframe = self.recv(timeout)
+            if rframe.arbitration_id == 0x7E0 + ch*2 + 1:
+                return rframe
+            if time.time() > (start + timeout):
+                raise Timeout()
+
+
 
 
 class CANBus(threading.Thread):
