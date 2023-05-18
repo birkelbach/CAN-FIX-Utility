@@ -17,20 +17,36 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-from .. import crc
-import time
 import math
-import can
+import os
+import logging
 from .. import FirmwareBase
 from .. import FirmwareError
 from .. import StandardFileLoader
-from cfutil import connection
+
+log = logging.getLogger(__name__)
 
 
 class Driver(FirmwareBase):
     def __init__(self, filename, node, vcode, conn):
         FirmwareBase.__init__(self, filename, node, vcode, conn)
         self.file = StandardFileLoader(filename)
+        # Here we check that the firmware verification code in the index.json file matches
+        # what we are being asked to use.  If the code is present in the index.json file
+        # and it's properly formed then we'll do the check otherwise we'll ignore it
+        if 'vcode' in self.file.index:
+            vc = self.file.index['vcode']
+            if isinstance(vc, str):
+                try:
+                    if vc[0:2] == "0x":
+                        vc = int(vc, 16)
+                    else:
+                        vc = int(vc)
+                    if vc != vcode:
+                        raise FirmwareError(f"Verification Code in {os.path.basename(filename)} does not match {vcode}")
+                except ValueError:
+                    log.warn(f"Verification code in {filename} is not properly formed")
+
         self.__progress = 0.0
 
     # These are overriding the base class indexing methods
