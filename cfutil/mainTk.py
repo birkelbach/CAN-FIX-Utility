@@ -20,7 +20,9 @@
 
 import logging
 import logging.config
+from threading import Thread
 import cfutil.config as config
+import canfix
 from . import nodes
 from . import connection
 from .connectTk  import ConnectDialog
@@ -28,6 +30,7 @@ from .configTk  import ConfigDialog
 from .infoTk import InfoDialog
 from .firmwareTk import FirmwareDialog
 import tkinter as tk
+from tkinter.scrolledtext import ScrolledText
 import tkinter.ttk as ttk
 import queue
 
@@ -40,6 +43,29 @@ UPDATE_NODE = 3
 ADD_PARAMETER = 4
 DEL_PARAMETER = 5
 UPDATE_PARAMETER = 6
+TRAFFIC_MESSAGE = 7
+
+class TrafficThread(Thread):
+    def __init__(self, callback):
+        Thread.__init__(self)
+        self.getout = False
+        self.msg_callback = callback
+
+    def run(self):
+        self.conn = connection.canbus.get_connection()
+        while(not self.getout):
+            try:
+                msg = self.conn.recv(0.5)
+                self.msg_callback(msg)
+            except connection.Timeout:
+                pass
+            except Exception as e:
+                log.error(e)
+        connection.canbus.free_connection(self.conn)
+
+    def stop(self):
+        self.getout = True
+
 
 class StatusBar(tk.Frame):
     def __init__(self, master):
@@ -133,24 +159,38 @@ class App(tk.Tk):
 
         nodeTab = cfTab(self.nb)
         parameterTab = cfTab(self.nb)
-        dataTab = cfTab(self.nb)
+        trafficTab = cfTab(self.nb)
 
         self.nb.add(nodeTab, text="Nodes")
         self.nb.add(parameterTab, text="Parameters")
-        self.nb.add(dataTab, text="Traffic")
+        self.nb.add(trafficTab, text="Traffic")
 
         self.nodeview = NodeView(nodeTab)
         self.parameterView = ParameterView(parameterTab)
 
+        # Node Tab
         self.nodeview.grid(row=0, column=0, sticky=tk.NSEW)
         nodescroll = ttk.Scrollbar(nodeTab, orient=tk.VERTICAL, command=self.nodeview.yview)
         self.nodeview.configure(yscroll=nodescroll.set)
         nodescroll.grid(row=0, column=1, sticky='ns')
 
+        # Parameter Tab
         self.parameterView.grid(row=0, column=0, sticky=tk.NSEW)
         paramscroll = ttk.Scrollbar(parameterTab, orient=tk.VERTICAL, command=self.parameterView.yview)
         self.parameterView.configure(yscroll=paramscroll.set)
         paramscroll.grid(row=0, column=1, sticky='ns')
+
+        # Traffic Tab
+        self.trafficbox = ScrolledText(trafficTab)
+        self.trafficbox.grid(row=0, column=0, padx=2, pady=2, sticky=tk.NSEW, columnspan=2)
+        self.trafficRawVar = tk.IntVar()
+        trafficRawCheck = ttk.Checkbutton(trafficTab, text="Raw CAN Messages", variable=self.trafficRawVar)
+        trafficRawCheck.grid(row=1, column=0, padx=4, pady=4, sticky=tk.E, columnspan=2)
+        self.clearnButton = ttk.Button(trafficTab, text = "Clear")
+        self.clearnButton.grid(row=2, column=0, padx=4, pady=4, sticky=tk.E)
+        self.trafficButton = ttk.Button(trafficTab, text = "Start", command=self.start_traffic)
+        self.trafficButton.grid(row=2, column=1, padx=4, pady=4, sticky=tk.E)
+
         self.nb.pack(expand=True, fill=tk.BOTH, side=tk.TOP)
         self.sb = StatusBar(self)
         if connection.canbus.connected:
@@ -164,6 +204,7 @@ class App(tk.Tk):
         # parameterTab.bind("<Visibility>", self.parameter_show)
         self.nodeview.bind("<Double-Button-1>", self.node_select)
         self.parameterView.bind("<Double-Button-1>", self.parameter_select)
+        self.clearnButton.bind("<Button-1>", self.clear_traffic)
 
     # These are callbacks that would be called from the node thread.  Commands
     # are added to the queue so that the gui thread can make updates.
@@ -186,6 +227,31 @@ class App(tk.Tk):
 
     def update_parameter(self, parameter):
         self.cmd_queue.put((UPDATE_PARAMETER, parameter))
+
+    def traffic_callback(self, msg):
+        if self.trafficRawVar.get():
+            self.cmd_queue.put((TRAFFIC_MESSAGE, f"{str(msg)}\n"))
+        else:
+            p = canfix.parseMessage(msg)
+            self.cmd_queue.put((TRAFFIC_MESSAGE, f"{str(p)}\n"))
+
+
+    def start_traffic(self): # Start Traffic button
+        self.trafficThread = TrafficThread(self.traffic_callback)
+        self.trafficThread.start()
+        self.trafficButton.configure(command = self.stop_traffic, text = "Stop")
+
+    def stop_traffic(self): # Stop Traffic button
+        self.trafficThread.stop()
+        self.trafficThread.join()
+        self.trafficThread = None
+        self.trafficButton.configure(command = self.start_traffic, text = "Start")
+
+
+    def clear_traffic(self, e): # Clear Traffic button
+        self.trafficbox['state']='normal'
+        self.trafficbox.delete('1.0', tk.END)
+        self.trafficbox['state']='disabled'
 
     def connect_callback(self):
         self.node_menu.entryconfig('Connect...', state='disabled')
@@ -330,22 +396,32 @@ class App(tk.Tk):
                         v = (cmd[1].nodeid,
                             pid,
                             cmd[1].name,
-                            "{:.4g} {}".format(cmd[1].value, cmd[1].units),
+                            cmd[1].valstring,
                             cmd[1].quality)
                         self.parameterView.insert('', tk.END, values=v, iid=(cmd[1].pid, cmd[1].index), open=False)
                     elif cmd[0] == DEL_PARAMETER:
                         self.parameterView.delete((cmd[1].pid, cmd[1].index))
                     elif cmd[0] == UPDATE_PARAMETER:
-                        self.parameterView.set((cmd[1].pid, cmd[1].index), 'value', "{:.4g} {}".format(cmd[1].value, cmd[1].units))
+                        self.parameterView.set((cmd[1].pid, cmd[1].index), 'value', cmd[1].valstring)
                         self.parameterView.set((cmd[1].pid, cmd[1].index), 'quality', cmd[1].quality)
+                    elif cmd[0] == TRAFFIC_MESSAGE:
+                        self.trafficbox['state']='normal'
+                        noscroll = self.trafficbox.yview()
+                        self.trafficbox.insert(tk.END, cmd[1])
+                        # this let's the user move the scroll bar and then we quit updating it
+                        # until it's back at the bottom
+                        if noscroll[1] > 0.96:
+                            self.trafficbox.yview(tk.END)
+                        self.trafficbox['state']='disabled'
+
                 except Exception as e:
                     print(e) #TODO change to debug logging
 
-        self.after(1000, self.manager)
+        self.after(100, self.manager)
 
     def run(self):
         self.nt.start() # Start the Node Handling Thread
-        self.after(1000, self.manager)
+        self.after(100, self.manager)
         self.mainloop() # Start the GUI
         self.nt.stop()
 

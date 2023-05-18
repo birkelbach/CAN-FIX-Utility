@@ -236,7 +236,11 @@ class FirmwareDialog(tk.Toplevel):
     # upload button callback.  Launch the firmware thread and disable the upload button
     def btn_upload(self):
         conn = connection.canbus.get_connection()
-        self.fw = firmware.Firmware(self.driverselect.get(), self.filename.get(), self.nodeselect.value, int(self.codetext.get()), conn)
+        try:
+            self.fw = firmware.Firmware(self.driverselect.get(), self.filename.get(), self.nodeselect.value, int(self.codetext.get()), conn)
+        except Exception as e:
+            self.progressLabel.configure(text = e)
+            return
         self.fw.setStopCallback(self.downloadEnded)
         self.fwThread = FirmwareThread(self.fw)
         self.fwThread.start()

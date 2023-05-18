@@ -34,9 +34,10 @@ class Paramter():
         self.index = None
         self.indexName = None
         self.name = None
+        self.type = ''
         self.value = None
         self.units = ''
-        self.quality = ""
+        self.quality = ''
         #TODO add min / max and meta information
 
     # This function returns True if a change was made
@@ -48,10 +49,14 @@ class Paramter():
         self.index = msg.index
         self.indexName = msg.indexName
         self.name = msg.name
+        self.type = msg.type
         if msg.indexName is not None:
             self.name += " {} #{}".format(msg.indexName, msg.index+1)
-        self.value = msg.value
-        self.units = msg.units
+        # Save some time by only doing this if we've changed
+        if self.value != msg.value:
+            self.valstring = msg.valueStr(units = True)
+            self.value = msg.value
+            self.units = msg.units
         #TODO deal with quality string
         #TODO add min / max and meta information
         self.lastupdate = time.time()
