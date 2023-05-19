@@ -66,7 +66,6 @@ class TrafficThread(Thread):
     def stop(self):
         self.getout = True
 
-
 class StatusBar(tk.Frame):
     def __init__(self, master):
         tk.Frame.__init__(self, master)
@@ -186,7 +185,7 @@ class App(tk.Tk):
         self.trafficRawVar = tk.IntVar()
         trafficRawCheck = ttk.Checkbutton(trafficTab, text="Raw CAN Messages", variable=self.trafficRawVar)
         trafficRawCheck.grid(row=1, column=0, padx=4, pady=4, sticky=tk.E, columnspan=2)
-        self.clearnButton = ttk.Button(trafficTab, text = "Clear")
+        self.clearnButton = ttk.Button(trafficTab, text = "Clear", command=self.clear_traffic)
         self.clearnButton.grid(row=2, column=0, padx=4, pady=4, sticky=tk.E)
         self.trafficButton = ttk.Button(trafficTab, text = "Start", command=self.start_traffic)
         self.trafficButton.grid(row=2, column=1, padx=4, pady=4, sticky=tk.E)
@@ -204,7 +203,6 @@ class App(tk.Tk):
         # parameterTab.bind("<Visibility>", self.parameter_show)
         self.nodeview.bind("<Double-Button-1>", self.node_select)
         self.parameterView.bind("<Double-Button-1>", self.parameter_select)
-        self.clearnButton.bind("<Button-1>", self.clear_traffic)
 
     # These are callbacks that would be called from the node thread.  Commands
     # are added to the queue so that the gui thread can make updates.
@@ -228,13 +226,10 @@ class App(tk.Tk):
     def update_parameter(self, parameter):
         self.cmd_queue.put((UPDATE_PARAMETER, parameter))
 
+    # This function is called from the TrafficThread to put the
+    # messages on the cmd_queue for the traffic tab
     def traffic_callback(self, msg):
-        if self.trafficRawVar.get():
-            self.cmd_queue.put((TRAFFIC_MESSAGE, f"{str(msg)}\n"))
-        else:
-            p = canfix.parseMessage(msg)
-            self.cmd_queue.put((TRAFFIC_MESSAGE, f"{str(p)}\n"))
-
+        self.cmd_queue.put((TRAFFIC_MESSAGE, msg))
 
     def start_traffic(self): # Start Traffic button
         self.trafficThread = TrafficThread(self.traffic_callback)
@@ -243,12 +238,12 @@ class App(tk.Tk):
 
     def stop_traffic(self): # Stop Traffic button
         self.trafficThread.stop()
-        self.trafficThread.join()
+        self.trafficThread.join(1.0)
         self.trafficThread = None
         self.trafficButton.configure(command = self.start_traffic, text = "Start")
 
 
-    def clear_traffic(self, e): # Clear Traffic button
+    def clear_traffic(self): # Clear Traffic button
         self.trafficbox['state']='normal'
         self.trafficbox.delete('1.0', tk.END)
         self.trafficbox['state']='disabled'
@@ -405,9 +400,14 @@ class App(tk.Tk):
                         self.parameterView.set((cmd[1].pid, cmd[1].index), 'value', cmd[1].valstring)
                         self.parameterView.set((cmd[1].pid, cmd[1].index), 'quality', cmd[1].quality)
                     elif cmd[0] == TRAFFIC_MESSAGE:
+                        if self.trafficRawVar.get():
+                            s = f"{str(cmd[1])}\n"
+                        else:
+                            p = canfix.parseMessage(cmd[1])
+                            s = f"{str(p)}\n"
                         self.trafficbox['state']='normal'
                         noscroll = self.trafficbox.yview()
-                        self.trafficbox.insert(tk.END, cmd[1])
+                        self.trafficbox.insert(tk.END, s)
                         # this let's the user move the scroll bar and then we quit updating it
                         # until it's back at the bottom
                         if noscroll[1] > 0.96:
@@ -416,7 +416,6 @@ class App(tk.Tk):
 
                 except Exception as e:
                     print(e) #TODO change to debug logging
-
         self.after(100, self.manager)
 
     def run(self):
