@@ -33,10 +33,18 @@ class ConfigError(Exception):
 
 
 # These are the custom widgets that we use for editing the configuration.  They
-# are smart enough to deal with the types and min/max attributes of the key
+# are smart enough to deal with the types and min/max attributes of the key.
+# Each should generate an <<Update>> event when the widget thinks the list
+# should change.  Each should expose a .value property that will deal with
+# converting the display in the widget to what is appropriate for sending
+# over the network as the configuration value.
 class TextEntry(tk.Entry):
     def __init__(self, parent, *args, **kwargs):
         tk.Entry.__init__(self, parent, *args, **kwargs)
+        self.bind("<FocusOut>", self.update_event)
+
+    def update_event(self, e):
+        self.event_generate("<<Update>>" )
 
     @property
     def value(self):
@@ -47,6 +55,10 @@ class IntEntry(tk.Entry):
     def __init__(self, parent, *args, **kwargs):
         self.text = tk.StringVar()
         tk.Entry.__init__(self, parent, textvariable=self.text, *args, **kwargs)
+        self.bind("<FocusOut>", self.update_event)
+
+    def update_event(self, e):
+        self.event_generate("<<Update>>" )
 
     @property
     def value(self):
@@ -62,6 +74,10 @@ class FloatEntry(tk.Entry):
     def __init__(self, parent, *args, **kwargs):
         self.text = tk.StringVar()
         tk.Entry.__init__(self, parent, textvariable=self.text, *args, **kwargs)
+        self.bind("<FocusOut>", self.update_event)
+
+    def update_event(self, e):
+        self.event_generate("<<Update>>" )
 
     @property
     def value(self):
@@ -77,6 +93,10 @@ class ListBox(ttk.Combobox):
         ttk.Combobox.__init__(self, parent, *args, **kwargs)
         self.selections = selections
         self["values"] = list(self.selections.keys())
+        self.bind("<<ComboboxSelected>>", self.update_event)
+
+    def update_event(self, e):
+        self.event_generate("<<Update>>" )
 
     @property
     def value(self):
@@ -100,10 +120,13 @@ class BitSelectBox(tk.Frame):
         self.checks = []
         x = 0
         for k, v in selections.items():
-            cb = ttk.Checkbutton(self, text = k, variable=self.variables[v], onvalue=1, offvalue=0)
+            cb = ttk.Checkbutton(self, text = k, variable=self.variables[v], onvalue=1, offvalue=0, command=self.update_event)
             cb.grid(column=0, row=x, sticky=tk.W)
             self.checks.append(cb)
             x += 1
+
+    def update_event(self):
+        self.event_generate("<<Update>>" )
 
     @property
     def value(self):
@@ -515,6 +538,9 @@ class ConfigDialog(tk.Toplevel):
         self.treeView = ConfigTree(mainFrame, node)
         self.treeView.grid(column=0, row=0, sticky=tk.NSEW)
         self.treeView.bind("<<TreeviewSelect>>", self.configSelect)
+        id = self.treeView.get_children()[0]
+        self.treeView.focus(id)
+        self.treeView.selection_set(id)
 
         sb = ttk.Scrollbar(mainFrame, command=self.treeView.yview)
         sb.grid(column=1, row=0, sticky=tk.NS)
@@ -527,17 +553,17 @@ class ConfigDialog(tk.Toplevel):
         self.cfgLabel = ttk.Label(self.cfgFrame, text = "-")
         self.cfgLabel.grid(column=0, row=0, padx=4, pady=4, sticky=tk.W)
 
-        self.cfgBtn = ttk.Button(self.cfgFrame, text="Apply", command=self.cfg_apply)
-        self.cfgBtn.grid(column=1, row=0, padx=4, pady=4, sticky=tk.E)
-
         btnFrame = ttk.Frame(self) # Frame for the buttons.
         btnFrame.grid(column=0, row=2, sticky=tk.E)
 
         # cancel and ok buttons
-        btnCancel = ttk.Button(btnFrame, text="Close", command=self.close_mod)
+        btnCancel = ttk.Button(btnFrame, text="Close", command=self.close_mod, takefocus=0)
         btnCancel.grid(row=0, column=0, sticky=tk.SE, padx=4, pady=4)
-        btnOk = ttk.Button(btnFrame, text="Send", command=self.btn_send)
-        btnOk.grid(row=0, column=1, sticky=tk.SE, padx=4, pady=4)
+        btnSend = ttk.Button(btnFrame, text="Send", command=self.btn_send, underline=0, takefocus=0)
+        btnSend.grid(row=0, column=1, sticky=tk.SE, padx=4, pady=4)
+
+        self.bind("<Control-s>", self.btn_send)
+        self.bind("<Escape>", self.close_mod)
 
         self.protocol("WM_DELETE_WINDOW", self.close_mod)
         self.grab_set() # makes the dialog modal
@@ -552,7 +578,7 @@ class ConfigDialog(tk.Toplevel):
         widgets = self.cfgFrame.winfo_children()
         # remove and delete all the controls except the label and the button
         for i in widgets:
-            if i is not self.cfgLabel and i is not self.cfgBtn:
+            if i is not self.cfgLabel:
                 i.grid_remove()
                 i.destroy()
         # find the item that we clicked on
@@ -560,21 +586,22 @@ class ConfigDialog(tk.Toplevel):
             if each.key == item["values"][0]:
                 self.cfgWidget = each.widget(self.cfgFrame)
                 self.cfgWidget.grid(row=1,column=0, padx=4,sticky=tk.EW)
+                self.cfgWidget.bind("<<Update>>", self.cfg_apply)
                 if each.units:
                     l = ttk.Label(self.cfgFrame, text = each.units)
                     l.grid(row=1, column=1, padx = 4, sticky=tk.W)
                 self.currentItem = each
 
 
-    def cfg_apply(self):
+    def cfg_apply(self, e):
         # TODO deal with the exceptions for values that can't be converted properly
         self.treeView.set_value(self.currentItem.key, self.cfgWidget.value)
 
     # send button callback.
-    def btn_send(self):
+    def btn_send(self, e=None):
         self.treeView.send_config()
 
-    def close_mod(self):
+    def close_mod(self, e=None):
         # top right corner cross click: return value ;`x`;
         # we need to send it a value, otherwise there will be an exception when closing parent window
         self.returning = ";`x`;"

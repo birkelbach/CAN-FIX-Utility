@@ -73,11 +73,14 @@ class InfoDialog(tk.Toplevel):
 
         self.textbox.insert('0.0', node.description)
         self.textbox['state'] = tk.DISABLED
+
+        self.bind("<Escape>", self.close_mod)
+
         self.protocol("WM_DELETE_WINDOW", self.close_mod)
         self.grab_set() # makes the dialog modal
 
 
-    def close_mod(self):
+    def close_mod(self, e=None):
         # top right corner cross click: return value ;`x`;
         # we need to send it a value, otherwise there will be an exception when closing parent window
         self.returning = ";`x`;"

@@ -410,7 +410,7 @@ class App(tk.Tk):
                         self.trafficbox.insert(tk.END, s)
                         # this let's the user move the scroll bar and then we quit updating it
                         # until it's back at the bottom
-                        if noscroll[1] > 0.96:
+                        if noscroll[1] > 0.98:
                             self.trafficbox.yview(tk.END)
                         self.trafficbox['state']='disabled'
 

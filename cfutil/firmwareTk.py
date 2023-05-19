@@ -159,7 +159,6 @@ class FirmwareDialog(tk.Toplevel):
         self.argentry = ttk.Entry(mainframe, textvariable=self.argtext)
         self.argentry.grid(row=3, column=1, sticky=tk.EW, pady = 2, padx = 5, columnspan=2)
 
-
         l = tk.Label(mainframe, text="Filename")
         l.grid(row=4, column=0, sticky=tk.E, pady = 2, padx = 5)
         self.filename = tk.StringVar()
@@ -182,10 +181,13 @@ class FirmwareDialog(tk.Toplevel):
         self.progressBar.grid(row=1, column=0, sticky=tk.EW)
 
         # cancel and ok buttons
-        btn1 = ttk.Button(buttonframe, text="Close", command=self.close_mod)
+        btn1 = ttk.Button(buttonframe, text="Close", command=self.close_mod, takefocus=0)
         btn1.grid(row=0, column=0, padx=2, pady=2, sticky=tk.SE)
-        self.uploadButton = ttk.Button(buttonframe, text="Upload", command=self.btn_upload)
+        self.uploadButton = ttk.Button(buttonframe, text="Upload", command=self.btn_upload, underline=0, takefocus=0)
         self.uploadButton.grid(row=0, column=1, padx=2, pady=2, sticky=tk.SE)
+
+        self.bind("<Control-u>", self.btn_upload)
+        self.bind("<Escape>", self.close_mod)
 
         self.protocol("WM_DELETE_WINDOW", self.close_mod)
         self.grab_set() # makes the dialog modal
@@ -234,7 +236,7 @@ class FirmwareDialog(tk.Toplevel):
             self.uploading = False
 
     # upload button callback.  Launch the firmware thread and disable the upload button
-    def btn_upload(self):
+    def btn_upload(self, e=None):
         conn = connection.canbus.get_connection()
         try:
             self.fw = firmware.Firmware(self.driverselect.get(), self.filename.get(), self.nodeselect.value, int(self.codetext.get()), conn)
@@ -248,10 +250,10 @@ class FirmwareDialog(tk.Toplevel):
         self.uploading = True
         self.after(100, self.update)
 
-    def btn_cancel(self):
+    def btn_cancel(self, e=None):
         self.fw.stop()
 
-    def close_mod(self):
+    def close_mod(self, e=None):
         # top right corner cross click: return value ;`x`;
         # we need to send it a value, otherwise there will be an exception when closing parent window
         if not self.uploading:

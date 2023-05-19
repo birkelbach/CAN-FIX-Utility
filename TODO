@@ -2,14 +2,14 @@ Main Screen:
   Add hot keys for menus and functions
   Add error pop up dialogs
   Add more to status bar... Status LED indicators, message counts etc
+  Add Quality, Failure and Annunciate Flags to Data Table View
+
 
 Config Dialog:
-  Add hot keys for each function
-  Git rid of the Apply button and save on changes
   Warn user when closing dialog with un-sent (dirty changes)
-  Set focus to list
   Save position and size of dialog
-  Deal with unknown node types on the network
+  Deal with unknown node types on the network??
+  Add spin buttons to IntEntry widget
 
 
 Node Information:
@@ -18,46 +18,42 @@ Node Information:
   Add Parameters to Information
   Add Update on timer or button?
 
-Add navigation hot keys functions to dialogs.  Mostly enter and escape.
+Feature Additions:
 
-Enable / Disable parameters
+  Enable / Disable parameters
 
-Write to file from traffic tab
+  Write to file from traffic tab
 
-Improve Connection status on the status bar.  Something like a blinking green light
-or frame counter.
+  Protocol Help Reference, parameter definitions frame definitions etc.  Basically
+  the specification but in a help type format.  Probably HTML viewer of some kind
+  with enough smarts to either read the canfix.json or generated from it.
 
-Connect dialog box needs to pre-set itself to the last used or configured
-settings
+  Online device file and protocol file updates?  Maybe online updates.  Links to
+  online help?
 
-Add Quality, Failure and Annunciate Flags to Data Table View
+  Save and restore configuration to nodes.  Probably use json.  Also add a
+  "Save Entire Network Configuration" menu item.
 
-Protocol Help Reference, parameter definitions frame definitions etc.  Basically
-the specification but in a help type format.  Probably HTML viewer of some kind
-with enough smarts to either read the canfix.json or generated from it.
+  Some kind of standard file sending / receiving protocol for some devices.  This could
+  be used to transfer more advanced configuration files, interpreter files, or
+  logged data files.  Would use the two-way channel mechanism.
 
-Online device file and protocol file updates?  Maybe online updates.  Links to
-online help?
+  Network health page.  Bus bandwidth (if available), errors if multiple nodes are
+  sending the same parameter.
 
-Save and restore configuration to nodes.  Probably use json.  Also add a
-"Save Entire Network Configuration" menu item.
+  Method to send certain parameters from the Utility.  Perhaps some kind of custom
+  page that we could use to send test information.  Configurable with json files maybe?
 
-Overhaul Firmware updating.  Allow updating firmware for unknown nodes and
-especially make sure it works from the command line.
 
-Global configuration for our node number
+Enhancements:
 
-Some kind of standard file sending / receiving protocol for some devices.  This could
-be used to transfer more advanced configuration files, interpreter files, or
-logged data files.  Would use the two-way channel mechanism.
+  Improve Connection status on the status bar.  Something like a blinking green light
+  or frame counter.
 
-Network health page.  Bus bandwidth (if available), errors if multiple nodes are
-sending the same parameter.
+  All dialogs need to pre-set itself to the last used or configured settings
 
-Method to send certain parameters from the Utility.  Perhaps some kind of custom
-page that we could use to send test information.  Configurable with json files maybe?
+  Save settings to disk somehow. Separate from the ini file.
 
-Save settings to disk somehow.  Probably use the ini file?
+  Descriptive Error when EDS file fails to load and fix crash on failure
 
-Descriptive Error when EDS file fails to load and fix crash on failure
-
+Bugs
