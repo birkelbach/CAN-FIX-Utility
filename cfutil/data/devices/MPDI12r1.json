@@ -4,8 +4,17 @@
     "model": "0x770001",
     "version": "0x01",
     "firmware_code": "0xF23",
-    "firmware_driver": "BASIC",
+    "firmware_driver": "STM32",
+    "node_status_errors": {
+        "0": "Firmware Checksum Failure",
+        "1": "Temperature Out of Range",
+        "2": "Voltage Out of Range"
+    },
+    "node_status": {
+        "256": ""
+    },
     "parameters": [
+        256,
         257,
         258,
         259,
@@ -27,8 +36,6 @@
         275,
         276,
         277,
-        278,
-        279,
         284,
         285,
         286,
@@ -75,8 +82,6 @@
                 "Transponder Commands Pilot 2": 275,
                 "Starter / Magneto Commands Pilot 1": 276,
                 "Starter / Magneto Commands Pilot 2": 277,
-                "Landing Gear Commands Pilot 1": 278,
-                "Landing Gear Commands Pilot 2": 279,
                 "Generic Switches 1 (High Priority)": 284,
                 "Generic Switches 2 (High Priority)": 285,
                 "Generic Switches 3 (High Priority)": 286,
@@ -92,7 +97,7 @@
                 "Generic Switches 5 (Normal Priority)": 780,
                 "Generic Switches 6 (Normal Priority)": 781,
                 "Generic Switches 7 (Normal Priority)": 782,
-                "Generic Switches 8 (Normal Priori] = y)": 783
+                "Generic Switches 8 (Normal Priority)": 783
             }
         },
         {
@@ -204,21 +209,6 @@
                     },
                     {
                         "compare": [
-                            270,
-                            271
-                        ],
-                        "name": "VHF Command",
-                        "type": "SHORT",
-                        "input": "list",
-                        "selections": {
-                            "PTT": 0,
-                            "Flip": 1,
-                            "Next Saved Frequency": 2,
-                            "Prev Saved Frequency": 3
-                        }
-                    },
-                    {
-                        "compare": [
                             272,
                             273
                         ],
@@ -251,7 +241,7 @@
                     {
                         "compare": [
                             276,
-                            293
+                            277
                         ],
                         "name": "Switch Number",
                         "type": "SHORT",
@@ -313,8 +303,6 @@
                 "Transponder Commands Pilot 2": 275,
                 "Starter / Magneto Commands Pilot 1": 276,
                 "Starter / Magneto Commands Pilot 2": 277,
-                "Landing Gear Commands Pilot 1": 278,
-                "Landing Gear Commands Pilot 2": 279,
                 "Generic Switches 1 (High Priority)": 284,
                 "Generic Switches 2 (High Priority)": 285,
                 "Generic Switches 3 (High Priority)": 286,
@@ -330,7 +318,7 @@
                 "Generic Switches 5 (Normal Priority)": 780,
                 "Generic Switches 6 (Normal Priority)": 781,
                 "Generic Switches 7 (Normal Priority)": 782,
-                "Generic Switches 8 (Normal Priori] = y)": 783
+                "Generic Switches 8 (Normal Priority)": 783
             }
         },
         {
@@ -442,21 +430,6 @@
                     },
                     {
                         "compare": [
-                            270,
-                            271
-                        ],
-                        "name": "VHF Command",
-                        "type": "SHORT",
-                        "input": "list",
-                        "selections": {
-                            "PTT": 0,
-                            "Flip": 1,
-                            "Next Saved Frequency": 2,
-                            "Prev Saved Frequency": 3
-                        }
-                    },
-                    {
-                        "compare": [
                             272,
                             273
                         ],
@@ -489,7 +462,7 @@
                     {
                         "compare": [
                             276,
-                            293
+                            277
                         ],
                         "name": "Switch Number",
                         "type": "SHORT",
@@ -551,8 +524,6 @@
                 "Transponder Commands Pilot 2": 275,
                 "Starter / Magneto Commands Pilot 1": 276,
                 "Starter / Magneto Commands Pilot 2": 277,
-                "Landing Gear Commands Pilot 1": 278,
-                "Landing Gear Commands Pilot 2": 279,
                 "Generic Switches 1 (High Priority)": 284,
                 "Generic Switches 2 (High Priority)": 285,
                 "Generic Switches 3 (High Priority)": 286,
@@ -568,7 +539,7 @@
                 "Generic Switches 5 (Normal Priority)": 780,
                 "Generic Switches 6 (Normal Priority)": 781,
                 "Generic Switches 7 (Normal Priority)": 782,
-                "Generic Switches 8 (Normal Priori] = y)": 783
+                "Generic Switches 8 (Normal Priority)": 783
             }
         },
         {
@@ -680,21 +651,6 @@
                     },
                     {
                         "compare": [
-                            270,
-                            271
-                        ],
-                        "name": "VHF Command",
-                        "type": "SHORT",
-                        "input": "list",
-                        "selections": {
-                            "PTT": 0,
-                            "Flip": 1,
-                            "Next Saved Frequency": 2,
-                            "Prev Saved Frequency": 3
-                        }
-                    },
-                    {
-                        "compare": [
                             272,
                             273
                         ],
@@ -727,7 +683,7 @@
                     {
                         "compare": [
                             276,
-                            293
+                            277
                         ],
                         "name": "Switch Number",
                         "type": "SHORT",
@@ -789,8 +745,6 @@
                 "Transponder Commands Pilot 2": 275,
                 "Starter / Magneto Commands Pilot 1": 276,
                 "Starter / Magneto Commands Pilot 2": 277,
-                "Landing Gear Commands Pilot 1": 278,
-                "Landing Gear Commands Pilot 2": 279,
                 "Generic Switches 1 (High Priority)": 284,
                 "Generic Switches 2 (High Priority)": 285,
                 "Generic Switches 3 (High Priority)": 286,
@@ -806,7 +760,7 @@
                 "Generic Switches 5 (Normal Priority)": 780,
                 "Generic Switches 6 (Normal Priority)": 781,
                 "Generic Switches 7 (Normal Priority)": 782,
-                "Generic Switches 8 (Normal Priori] = y)": 783
+                "Generic Switches 8 (Normal Priority)": 783
             }
         },
         {
@@ -918,21 +872,6 @@
                     },
                     {
                         "compare": [
-                            270,
-                            271
-                        ],
-                        "name": "VHF Command",
-                        "type": "SHORT",
-                        "input": "list",
-                        "selections": {
-                            "PTT": 0,
-                            "Flip": 1,
-                            "Next Saved Frequency": 2,
-                            "Prev Saved Frequency": 3
-                        }
-                    },
-                    {
-                        "compare": [
                             272,
                             273
                         ],
@@ -965,7 +904,7 @@
                     {
                         "compare": [
                             276,
-                            293
+                            277
                         ],
                         "name": "Switch Number",
                         "type": "SHORT",
@@ -1027,8 +966,6 @@
                 "Transponder Commands Pilot 2": 275,
                 "Starter / Magneto Commands Pilot 1": 276,
                 "Starter / Magneto Commands Pilot 2": 277,
-                "Landing Gear Commands Pilot 1": 278,
-                "Landing Gear Commands Pilot 2": 279,
                 "Generic Switches 1 (High Priority)": 284,
                 "Generic Switches 2 (High Priority)": 285,
                 "Generic Switches 3 (High Priority)": 286,
@@ -1044,7 +981,7 @@
                 "Generic Switches 5 (Normal Priority)": 780,
                 "Generic Switches 6 (Normal Priority)": 781,
                 "Generic Switches 7 (Normal Priority)": 782,
-                "Generic Switches 8 (Normal Priori] = y)": 783
+                "Generic Switches 8 (Normal Priority)": 783
             }
         },
         {
@@ -1156,21 +1093,6 @@
                     },
                     {
                         "compare": [
-                            270,
-                            271
-                        ],
-                        "name": "VHF Command",
-                        "type": "SHORT",
-                        "input": "list",
-                        "selections": {
-                            "PTT": 0,
-                            "Flip": 1,
-                            "Next Saved Frequency": 2,
-                            "Prev Saved Frequency": 3
-                        }
-                    },
-                    {
-                        "compare": [
                             272,
                             273
                         ],
@@ -1203,7 +1125,7 @@
                     {
                         "compare": [
                             276,
-                            293
+                            277
                         ],
                         "name": "Switch Number",
                         "type": "SHORT",
@@ -1265,8 +1187,6 @@
                 "Transponder Commands Pilot 2": 275,
                 "Starter / Magneto Commands Pilot 1": 276,
                 "Starter / Magneto Commands Pilot 2": 277,
-                "Landing Gear Commands Pilot 1": 278,
-                "Landing Gear Commands Pilot 2": 279,
                 "Generic Switches 1 (High Priority)": 284,
                 "Generic Switches 2 (High Priority)": 285,
                 "Generic Switches 3 (High Priority)": 286,
@@ -1282,7 +1202,7 @@
                 "Generic Switches 5 (Normal Priority)": 780,
                 "Generic Switches 6 (Normal Priority)": 781,
                 "Generic Switches 7 (Normal Priority)": 782,
-                "Generic Switches 8 (Normal Priori] = y)": 783
+                "Generic Switches 8 (Normal Priority)": 783
             }
         },
         {
@@ -1394,21 +1314,6 @@
                     },
                     {
                         "compare": [
-                            270,
-                            271
-                        ],
-                        "name": "VHF Command",
-                        "type": "SHORT",
-                        "input": "list",
-                        "selections": {
-                            "PTT": 0,
-                            "Flip": 1,
-                            "Next Saved Frequency": 2,
-                            "Prev Saved Frequency": 3
-                        }
-                    },
-                    {
-                        "compare": [
                             272,
                             273
                         ],
@@ -1441,7 +1346,7 @@
                     {
                         "compare": [
                             276,
-                            293
+                            277
                         ],
                         "name": "Switch Number",
                         "type": "SHORT",
@@ -1503,8 +1408,6 @@
                 "Transponder Commands Pilot 2": 275,
                 "Starter / Magneto Commands Pilot 1": 276,
                 "Starter / Magneto Commands Pilot 2": 277,
-                "Landing Gear Commands Pilot 1": 278,
-                "Landing Gear Commands Pilot 2": 279,
                 "Generic Switches 1 (High Priority)": 284,
                 "Generic Switches 2 (High Priority)": 285,
                 "Generic Switches 3 (High Priority)": 286,
@@ -1520,7 +1423,7 @@
                 "Generic Switches 5 (Normal Priority)": 780,
                 "Generic Switches 6 (Normal Priority)": 781,
                 "Generic Switches 7 (Normal Priority)": 782,
-                "Generic Switches 8 (Normal Priori] = y)": 783
+                "Generic Switches 8 (Normal Priority)": 783
             }
         },
         {
@@ -1632,21 +1535,6 @@
                     },
                     {
                         "compare": [
-                            270,
-                            271
-                        ],
-                        "name": "VHF Command",
-                        "type": "SHORT",
-                        "input": "list",
-                        "selections": {
-                            "PTT": 0,
-                            "Flip": 1,
-                            "Next Saved Frequency": 2,
-                            "Prev Saved Frequency": 3
-                        }
-                    },
-                    {
-                        "compare": [
                             272,
                             273
                         ],
@@ -1679,7 +1567,7 @@
                     {
                         "compare": [
                             276,
-                            293
+                            277
                         ],
                         "name": "Switch Number",
                         "type": "SHORT",
@@ -1741,8 +1629,6 @@
                 "Transponder Commands Pilot 2": 275,
                 "Starter / Magneto Commands Pilot 1": 276,
                 "Starter / Magneto Commands Pilot 2": 277,
-                "Landing Gear Commands Pilot 1": 278,
-                "Landing Gear Commands Pilot 2": 279,
                 "Generic Switches 1 (High Priority)": 284,
                 "Generic Switches 2 (High Priority)": 285,
                 "Generic Switches 3 (High Priority)": 286,
@@ -1758,7 +1644,7 @@
                 "Generic Switches 5 (Normal Priority)": 780,
                 "Generic Switches 6 (Normal Priority)": 781,
                 "Generic Switches 7 (Normal Priority)": 782,
-                "Generic Switches 8 (Normal Priori] = y)": 783
+                "Generic Switches 8 (Normal Priority)": 783
             }
         },
         {
@@ -1870,21 +1756,6 @@
                     },
                     {
                         "compare": [
-                            270,
-                            271
-                        ],
-                        "name": "VHF Command",
-                        "type": "SHORT",
-                        "input": "list",
-                        "selections": {
-                            "PTT": 0,
-                            "Flip": 1,
-                            "Next Saved Frequency": 2,
-                            "Prev Saved Frequency": 3
-                        }
-                    },
-                    {
-                        "compare": [
                             272,
                             273
                         ],
@@ -1917,7 +1788,7 @@
                     {
                         "compare": [
                             276,
-                            293
+                            277
                         ],
                         "name": "Switch Number",
                         "type": "SHORT",
@@ -1979,8 +1850,6 @@
                 "Transponder Commands Pilot 2": 275,
                 "Starter / Magneto Commands Pilot 1": 276,
                 "Starter / Magneto Commands Pilot 2": 277,
-                "Landing Gear Commands Pilot 1": 278,
-                "Landing Gear Commands Pilot 2": 279,
                 "Generic Switches 1 (High Priority)": 284,
                 "Generic Switches 2 (High Priority)": 285,
                 "Generic Switches 3 (High Priority)": 286,
@@ -1996,7 +1865,7 @@
                 "Generic Switches 5 (Normal Priority)": 780,
                 "Generic Switches 6 (Normal Priority)": 781,
                 "Generic Switches 7 (Normal Priority)": 782,
-                "Generic Switches 8 (Normal Priori] = y)": 783
+                "Generic Switches 8 (Normal Priority)": 783
             }
         },
         {
@@ -2108,21 +1977,6 @@
                     },
                     {
                         "compare": [
-                            270,
-                            271
-                        ],
-                        "name": "VHF Command",
-                        "type": "SHORT",
-                        "input": "list",
-                        "selections": {
-                            "PTT": 0,
-                            "Flip": 1,
-                            "Next Saved Frequency": 2,
-                            "Prev Saved Frequency": 3
-                        }
-                    },
-                    {
-                        "compare": [
                             272,
                             273
                         ],
@@ -2155,7 +2009,7 @@
                     {
                         "compare": [
                             276,
-                            293
+                            277
                         ],
                         "name": "Switch Number",
                         "type": "SHORT",
@@ -2217,8 +2071,6 @@
                 "Transponder Commands Pilot 2": 275,
                 "Starter / Magneto Commands Pilot 1": 276,
                 "Starter / Magneto Commands Pilot 2": 277,
-                "Landing Gear Commands Pilot 1": 278,
-                "Landing Gear Commands Pilot 2": 279,
                 "Generic Switches 1 (High Priority)": 284,
                 "Generic Switches 2 (High Priority)": 285,
                 "Generic Switches 3 (High Priority)": 286,
@@ -2234,7 +2086,7 @@
                 "Generic Switches 5 (Normal Priority)": 780,
                 "Generic Switches 6 (Normal Priority)": 781,
                 "Generic Switches 7 (Normal Priority)": 782,
-                "Generic Switches 8 (Normal Priori] = y)": 783
+                "Generic Switches 8 (Normal Priority)": 783
             }
         },
         {
@@ -2346,21 +2198,6 @@
                     },
                     {
                         "compare": [
-                            270,
-                            271
-                        ],
-                        "name": "VHF Command",
-                        "type": "SHORT",
-                        "input": "list",
-                        "selections": {
-                            "PTT": 0,
-                            "Flip": 1,
-                            "Next Saved Frequency": 2,
-                            "Prev Saved Frequency": 3
-                        }
-                    },
-                    {
-                        "compare": [
                             272,
                             273
                         ],
@@ -2393,7 +2230,7 @@
                     {
                         "compare": [
                             276,
-                            293
+                            277
                         ],
                         "name": "Switch Number",
                         "type": "SHORT",
@@ -2455,8 +2292,6 @@
                 "Transponder Commands Pilot 2": 275,
                 "Starter / Magneto Commands Pilot 1": 276,
                 "Starter / Magneto Commands Pilot 2": 277,
-                "Landing Gear Commands Pilot 1": 278,
-                "Landing Gear Commands Pilot 2": 279,
                 "Generic Switches 1 (High Priority)": 284,
                 "Generic Switches 2 (High Priority)": 285,
                 "Generic Switches 3 (High Priority)": 286,
@@ -2472,7 +2307,7 @@
                 "Generic Switches 5 (Normal Priority)": 780,
                 "Generic Switches 6 (Normal Priority)": 781,
                 "Generic Switches 7 (Normal Priority)": 782,
-                "Generic Switches 8 (Normal Priori] = y)": 783
+                "Generic Switches 8 (Normal Priority)": 783
             }
         },
         {
@@ -2584,21 +2419,6 @@
                     },
                     {
                         "compare": [
-                            270,
-                            271
-                        ],
-                        "name": "VHF Command",
-                        "type": "SHORT",
-                        "input": "list",
-                        "selections": {
-                            "PTT": 0,
-                            "Flip": 1,
-                            "Next Saved Frequency": 2,
-                            "Prev Saved Frequency": 3
-                        }
-                    },
-                    {
-                        "compare": [
                             272,
                             273
                         ],
@@ -2631,7 +2451,7 @@
                     {
                         "compare": [
                             276,
-                            293
+                            277
                         ],
                         "name": "Switch Number",
                         "type": "SHORT",
@@ -2693,8 +2513,6 @@
                 "Transponder Commands Pilot 2": 275,
                 "Starter / Magneto Commands Pilot 1": 276,
                 "Starter / Magneto Commands Pilot 2": 277,
-                "Landing Gear Commands Pilot 1": 278,
-                "Landing Gear Commands Pilot 2": 279,
                 "Generic Switches 1 (High Priority)": 284,
                 "Generic Switches 2 (High Priority)": 285,
                 "Generic Switches 3 (High Priority)": 286,
@@ -2710,7 +2528,7 @@
                 "Generic Switches 5 (Normal Priority)": 780,
                 "Generic Switches 6 (Normal Priority)": 781,
                 "Generic Switches 7 (Normal Priority)": 782,
-                "Generic Switches 8 (Normal Priori] = y)": 783
+                "Generic Switches 8 (Normal Priority)": 783
             }
         },
         {
@@ -2822,21 +2640,6 @@
                     },
                     {
                         "compare": [
-                            270,
-                            271
-                        ],
-                        "name": "VHF Command",
-                        "type": "SHORT",
-                        "input": "list",
-                        "selections": {
-                            "PTT": 0,
-                            "Flip": 1,
-                            "Next Saved Frequency": 2,
-                            "Prev Saved Frequency": 3
-                        }
-                    },
-                    {
-                        "compare": [
                             272,
                             273
                         ],
@@ -2869,7 +2672,7 @@
                     {
                         "compare": [
                             276,
-                            293
+                            277
                         ],
                         "name": "Switch Number",
                         "type": "SHORT",

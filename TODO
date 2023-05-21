@@ -44,7 +44,8 @@ Feature Additions:
   Method to send certain parameters from the Utility.  Perhaps some kind of custom
   page that we could use to send test information.  Configurable with json files maybe?
 
-
+  Add save / load configuration feature to GUI
+  
 Enhancements:
 
   Improve Connection status on the status bar.  Something like a blinking green light

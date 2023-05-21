@@ -21,7 +21,6 @@
 
 
 from PyQt5.QtCore import *
-import os
 import logging
 import json
 import time
@@ -113,48 +112,20 @@ def getNodeInformation(sendNode, destNode):
                 return None
 
 class SaveThread(threading.Thread):
-    def __init__(self):
+    def __init__(self, node, file):
         super(SaveThread, self).__init__()
         self.daemon = True
         self.getout = False
         self.attempts = 3
         self.timeout = 1.0
-        self.nodeid = None
-        self.statusCallback = lambda message, percent, done : print(message)
-        self.percentCallback = lambda percent : print(percent)
-        self.finishedCallback = lambda finished : print(finished)
-        self.startKey = 0
-        self.endKey = 0
-        self.cfgList = []
+        self.nodeid = node
+        self.statusCallback = lambda message : print(message)
+        self.percentCallback = lambda *args: None
+        self.finishedCallback = lambda *args: None
         self.conn = canbus.get_connection()
-        self.output = OrderedDict()
-
-    # Takes an integer key and attempts to read the key from the node at
-    # self.nodeid.  If successful it returns the data that was received.  On
-    # timeout it returns None and on error returns and empty list.
-    def getConfigItem(self, key):
-        msg = canfix.NodeConfigurationQuery(key=key)
-        msg.sendNode = config.node
-        msg.destNode = self.nodeid
-        for x in range(self.attempts): # How many times to try
-            self.conn.send(msg.msg)  # Send request
-            while(True):
-                start = time.time()
-                try:
-                    result = self.conn.recv(timeout = self.timeout)
-                except connection.Timeout:
-                    break
-                else:
-                    p = canfix.parseMessage(result)
-                    if isinstance(p, canfix.NodeConfigurationQuery) and p.destNode == config.node:
-                        if p.error:
-                            return []
-                        return p.rawdata[1:]
-                    else:
-                        if time.time() - start > self.timeout:
-                            break
-
-
+        self.output = {}
+        self.file = file
+ 
     def run(self):
         log.debug("looking for node at {}".format(self.nodeid))
         result = getNodeInformation(config.node, self.nodeid)
@@ -169,25 +140,108 @@ class SaveThread(threading.Thread):
             self.output['device'] = self.device
             self.output['model'] = self.model
             self.output['version'] = self.version
+            self.output['cfgVersion'] = 1.0
+            self.output['saved'] = time.ctime()
         else:
             log.error("Node Not Found")
+            self.statusCallback(f"Node Not Found")
+            return
 
-        self.output['items'] = []
+
+        items = {}
         for x, each in enumerate(self.eds_info.configuration):
-            result = self.getConfigItem(each['key'])
-            d = OrderedDict([("key", each["key"]), ('name', each['name']), ('type',each['type'])])
-            d['data'] = []
-            for i in result:
-                d['data'].append("0x{:02X}".format(i))
-            self.output['items'].append(d)
-            if self.getout == True:
-                self.statusCallback("Canceled")
-                self.finishedCallback(False)
-                canbus.free_connection(self.conn)
-                return
-            self.statusCallback("Saving - {}".format(each['name']))
+            result = queryNodeConfiguration(config.node, self.nodeid, each['key'])
+            if 'depends' in each: # This is a dependent key
+                key = each['depends']['key']
+                for de in each['depends']['definitions']:
+                    if isinstance(de['compare'], list):
+                        if items[key]['value'] in de['compare']:
+                            definition = de
+                    else:
+                        if items[key]['value'] == de['compare']:
+                            definition = de
+                if definition is not None:
+                    result.datatype = definition['type']
+                    name = definition['name']
+            else:
+                name = each['name']
+                result.datatype = each['type']
+            if 'multiplier' in each:
+                mult = each['multiplier']
+            else:
+                mult = 1.0
+            items[each["key"]] = {'name':name,'type':result.datatype,'multiplier':mult,'value':result.value}
+            
+            self.statusCallback(f"Saving - {each['key']} - {name}")
             self.percentCallback(int(x/len(self.eds_info.configuration)*100))
+        self.output['items'] = items
+        self.percentCallback(100)
+        self.statusCallback("Finished")
+        self.finishedCallback(True)
+        canbus.free_connection(self.conn)
+        json.dump(self.output, self.file, indent=2)
 
+    def stop(self):
+        self.getout = True
+        self.join(2.0)
+        if self.isAlive():
+            log.warning("Config Save thread failed to stop properly")
+
+
+class LoadThread(threading.Thread):
+    def __init__(self, node, file):
+        super(LoadThread, self).__init__()
+        self.daemon = True
+        self.getout = False
+        self.attempts = 3
+        self.timeout = 1.0
+        self.nodeid = node
+        self.statusCallback = lambda message : print(message)
+        self.percentCallback = lambda *args: None
+        self.finishedCallback = lambda *args: None
+        self.conn = canbus.get_connection()
+        self.input = json.load(file)
+        if 'cfgVersion' in self.input:
+            self.version = self.input['cfgVersion']
+        else:
+            self.version = None
+        
+    def run(self):
+        if self.version is None or self.version != 1.0:
+            log.error("Unknown configuration file")
+            self.statusCallback("Unknown configuration file")
+            return
+        
+        log.debug("looking for node at {}".format(self.nodeid))
+        result = getNodeInformation(config.node, self.nodeid)
+        if result is not None:
+            self.device = result[0]
+            self.model = result[1]
+            self.version = result[2]
+            # Find the EDS file information for this node
+            self.eds_info = devices.findDevice(self.device, self.model, self.version)
+            if self.eds_info is not None:
+                if self.eds_info.deviceType != self.input['device']:
+                    self.statusCallback("Device ID mismatch")
+                    return
+                if self.eds_info.modelNumber != self.input['model']:
+                    self.statusCallback("Model Number mismatch")
+                    return
+                if self.eds_info.version != self.input['version']:
+                    self.statusCallback("Version Number mismatch")
+                    return    
+        else:
+            log.error("Node Not Found")
+            self.statusCallback(f"Node Not Found")
+            return
+
+        for x, key in enumerate(self.input['items']):
+            item = self.input['items'][key]
+            self.statusCallback(f"Sending Key {key}")
+            result = setNodeConfiguration(config.node, self.nodeid, int(key), item['type'], item['multiplier'], item['value'])
+            if result is None:
+                self.statusCallback("Error writing Configuration key {key}")        
+            self.percentCallback(int(x/len(self.input['items'])*100))
         self.percentCallback(100)
         self.statusCallback("Finished")
         self.finishedCallback(True)
@@ -198,41 +252,5 @@ class SaveThread(threading.Thread):
         self.getout = True
         self.join(2.0)
         if self.isAlive():
-            log.warning("Config Save thread failed to stop properly")
+            log.warning("Config Load thread failed to stop properly")
 
-
-class ConfigSave(QObject):
-    status = pyqtSignal(str)     # Gives a string message of the progress status
-    percent = pyqtSignal(int)    # percent complete 0-100
-    finished = pyqtSignal(bool)  # True if sucessful, False if falied or canceled
-
-    def __init__(self, nodeid, file):
-        super(ConfigSave, self).__init__()
-        self.nodeid = nodeid
-        self.file = file
-        self.startKey = 0
-        self.endKey = 0
-        self.eds_info = None
-
-    def __finished(self, result):
-        if result:
-            print(json.dumps(self.sthread.output, indent=2))
-            json.dump(self.sthread.output, self.file, indent=2)
-        self.finished.emit(result)
-
-    def start(self):
-        self.sthread = SaveThread()
-        self.sthread.startKey = self.startKey
-        self.sthread.endKey = self.endKey
-        self.sthread.nodeid = self.nodeid
-        self.sthread.statusCallback = self.status.emit
-        self.sthread.percentCallback = self.percent.emit
-        self.sthread.finishedCallback = self.__finished
-        self.sthread.start()
-
-    def stop(self):
-        self.sthread.stop()
-
-
-class ConfigLoad(QObject):
-    pass

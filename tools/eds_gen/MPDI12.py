@@ -41,6 +41,7 @@ d =  {
    },
   "parameters":
     [
+      int("0x100", base=16),
       int("0x101", base=16),
       int("0x102", base=16),
       int("0x103", base=16),
@@ -62,8 +63,8 @@ d =  {
       int("0x113", base=16),
       int("0x114", base=16),
       int("0x115", base=16),
-      int("0x116", base=16),
-      int("0x117", base=16),
+      #int("0x116", base=16),
+      #int("0x117", base=16),
       int("0x11C", base=16),
       int("0x11D", base=16),
       int("0x11E", base=16),
@@ -116,10 +117,10 @@ for x in range(12):
     sel["Transponder Commands Pilot 2"] =            int("0x113", base=16)
     sel["Starter / Magneto Commands Pilot 1"] =      int("0x114", base=16)
     sel["Starter / Magneto Commands Pilot 2"] =      int("0x115", base=16)
-    sel["Landing Gear Commands Pilot 1"] =           int("0x116", base=16)
-    sel["Landing Gear Commands Pilot 2"] =           int("0x117", base=16)
-    sel["Landing Gear Commands Pilot 1"] =           int("0x116", base=16)
-    sel["Landing Gear Commands Pilot 2"] =           int("0x117", base=16)
+    #sel["Landing Gear Commands Pilot 1"] =           int("0x116", base=16)
+    #sel["Landing Gear Commands Pilot 2"] =           int("0x117", base=16)
+    #sel["Landing Gear Commands Pilot 1"] =           int("0x116", base=16)
+    #sel["Landing Gear Commands Pilot 2"] =           int("0x117", base=16)
     sel["Generic Switches 1 (High Priority)"] =      int("0x11C", base=16)
     sel["Generic Switches 2 (High Priority)"] =      int("0x11D", base=16)
     sel["Generic Switches 3 (High Priority)"] =      int("0x11E", base=16)
@@ -135,7 +136,7 @@ for x in range(12):
     sel["Generic Switches 5 (Normal Priority)"] =    int("0x30C", base=16)
     sel["Generic Switches 6 (Normal Priority)"] =    int("0x30D", base=16)
     sel["Generic Switches 7 (Normal Priority)"] =    int("0x30E", base=16)
-    sel["Generic Switches 8 (Normal Priori] = y)"] = int("0x30F", base=16)
+    sel["Generic Switches 8 (Normal Priority)"] =    int("0x30F", base=16)
     c["selections"] = sel
     configuration.append(c)
 
@@ -245,20 +246,6 @@ for x in range(12):
                       }
                   },
                   {
-                  "compare":[int("0x10E", base=16),
-                             int("0x10F", base=16)],
-                  "name":"VHF Command",
-                  "type":"SHORT",
-                  "input":"list",
-                  "selections":
-                      {
-                      "PTT":0,
-                      "Flip":1,
-                      "Next Saved Frequency":2,
-                      "Prev Saved Frequency":3
-                      }
-                  },
-                  {
                   "compare":[int("0x110", base=16),
                              int("0x111", base=16)],
                   "name":"VOR / Loc Command",
@@ -289,7 +276,7 @@ for x in range(12):
                   },
                   {
                   "compare":[int("0x114", base=16),
-                             int("0x125", base=16)],
+                             int("0x115", base=16)],
                   "name":"Switch Number",
                   "type":"SHORT",
                   "min":0,

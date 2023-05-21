@@ -26,6 +26,7 @@ import canfix
 import cfutil.config as config
 import cfutil.connection as connection
 import cfutil.devices as devices
+import cfutil.configNode as configNode
 
 log = logging.getLogger(__name__)
 
@@ -63,12 +64,6 @@ def listen(conn, msg_count, raw):
                 log.error(e.message)
             else:
                 log.error(str(e))
-
-# def findDevice(did):
-#     for each in devices.devices:
-#         if each.DeviceId == did:
-#             return each
-#     return None
 
 def fwstatus(status):
     print(status)
@@ -141,6 +136,19 @@ def load_firmware(conn, filename, args):
     except KeyboardInterrupt:
         fw.kill = True
 
+# Creates, starts and then waits on a thread for saving the node's configuration
+# to the file poitned to by the file
+def save_configuration(node, file):
+    st = configNode.SaveThread(node, file)
+    st.start()
+    st.join()
+
+# Creates, starts and then waits on a thread for loading the node's configuration
+# from the file poitned to by the file
+def load_configuration(node, file):
+    lt = configNode.LoadThread(node, file)
+    lt.start()
+    lt.join()
 
 def run(args):
     cmdrun = False
@@ -158,7 +166,12 @@ def run(args):
                 raise(Exception("ERROR: Target Node Number Requried"))
 
             load_firmware(conn, args.firmware_file, args)
-
+        if args.load_configuration:
+            cmdrun = True
+            load_configuration(args.node, args.load_configuration)
+        if args.save_configuration:
+            cmdrun = True
+            save_configuration(args.node, args.save_configuration)
         if args.listen == True:
             listen(conn, args.frame_count, args.raw)
             cmdrun = True

@@ -50,6 +50,10 @@ def main():
     parser.add_argument('--frame-count', type=int, default=0, help='Number of frames to print before exiting')
     parser.add_argument('--raw', action='store_true', help='Display raw frames')
     parser.add_argument('--timeout', type=int, default=0, help='Number of seconds to wait for a node to show up')
+    parser.add_argument('--load-configuration', type=argparse.FileType('r'),
+                            help='Load the configuration from the file to --node')
+    parser.add_argument('--save-configuration', type=argparse.FileType('w'),
+                            help='Save the configuration to the file from --node')
     parser.add_argument('--config-file', type=argparse.FileType('r'),
                             help='Alternate configuration file')
     parser.add_argument('--log-config', type=argparse.FileType('w'),
