@@ -5,6 +5,7 @@ Main Screen:
   Add Quality, Failure and Annunciate Flags to Data Table View
 
 
+
 Config Dialog:
   Warn user when closing dialog with un-sent (dirty changes)
   Save position and size of dialog
@@ -31,8 +32,7 @@ Feature Additions:
   Online device file and protocol file updates?  Maybe online updates.  Links to
   online help?
 
-  Save and restore configuration to nodes.  Probably use json.  Also add a
-  "Save Entire Network Configuration" menu item.
+  "Save Entire Network Configuration" feature.
 
   Some kind of standard file sending / receiving protocol for some devices.  This could
   be used to transfer more advanced configuration files, interpreter files, or
@@ -44,8 +44,7 @@ Feature Additions:
   Method to send certain parameters from the Utility.  Perhaps some kind of custom
   page that we could use to send test information.  Configurable with json files maybe?
 
-  Add save / load configuration feature to GUI
-  
+
 Enhancements:
 
   Improve Connection status on the status bar.  Something like a blinking green light

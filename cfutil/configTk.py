@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #  CAN-FIX Utilities - An Open Source CAN FIX Utility Package
-#  Copyright (c) 2012 Phil Birkelbach
+#  Copyright (c) 2023 Phil Birkelbach
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -19,8 +19,6 @@
 import logging
 import logging.config
 import cfutil.config as config
-from . import nodes
-from . import connection
 from . import configNode
 import tkinter as tk
 import tkinter.ttk as ttk

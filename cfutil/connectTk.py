@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #  CAN-FIX Utilities - An Open Source CAN FIX Utility Package
-#  Copyright (c) 2012 Phil Birkelbach
+#  Copyright (c) 2023 Phil Birkelbach
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ class SocketCanChannel(ttk.Combobox):
     def __init__(self, parent, *args, **kwargs):
         ttk.Combobox.__init__(self, parent, *args, **kwargs)
         self['values'] = ['can0', 'can1','vcan0', 'vcan1', 'slcan0', 'slcan1']
-    
+
     @property
     def value(self):
         print(self.get())
@@ -46,7 +46,7 @@ class PCANChannel(ttk.Combobox):
     def __init__(self, parent, *args, **kwargs):
         ttk.Combobox.__init__(self, parent, *args, **kwargs)
         self['values'] = ['PCAN_USBBUS1']
-    
+
     @property
     def value(self):
         return self.get()
@@ -55,7 +55,7 @@ class SerialChannel(ttk.Combobox):
     def __init__(self, parent, *args, **kwargs):
         ttk.Combobox.__init__(self, parent, *args, **kwargs)
         self['values'] = config.portlist
-    
+
     @property
     def value(self):
         return self.get()
@@ -65,7 +65,7 @@ class SerialBaudrate(ttk.Combobox):
         ttk.Combobox.__init__(self, parent, *args, **kwargs)
         self['values'] = [2400, 4800, 9600, 19200, 28800, 38400, 57600, 76800, 115200, 230400]
         self['state'] = 'readonly'
-    
+
     @property
     def value(self):
         return self.get()
@@ -75,7 +75,7 @@ class Bitrate(ttk.Combobox):
         ttk.Combobox.__init__(self, parent, *args, **kwargs)
         self['values'] = ['125 kbps', '250 kbps', '500 kbps', '1000 kbps']
         self['state'] = 'readonly'
-    
+
     @property
     def value(self):
         return self.get()
@@ -83,15 +83,15 @@ class Bitrate(ttk.Combobox):
 class TextEntry(tk.Entry):
     def __init__(self, parent, *args, **kwargs):
         tk.Entry.__init__(self, parent, *args, **kwargs)
-    
+
     @property
     def value(self):
         return self.get()
-    
+
 class IntEntry(tk.Entry):
     def __init__(self, parent, *args, **kwargs):
         tk.Entry.__init__(self, parent, *args, **kwargs)
-    
+
     @property
     def value(self):
         return self.get()
@@ -100,10 +100,10 @@ class IntEntry(tk.Entry):
 # the dialog box.  The first item in the tuple is the label text,
 # the second item is the argument name.  This argument should be suitable
 # as the argument name for the given interface's python-can Bus class
-# constructor.   The third is the class of the object that we'll use 
+# constructor.   The third is the class of the object that we'll use
 interface_db = {}
 interface_db['socketcan'] = [('Channel', 'channel', SocketCanChannel)]
-interface_db['socketcand'] = [('Channel', 'channel', SocketCanChannel), 
+interface_db['socketcand'] = [('Channel', 'channel', SocketCanChannel),
                               ('Host', 'host', TextEntry),
                               ('Port', 'post', IntEntry)]
 interface_db['slcan'] = [('Channel', 'channel', SerialChannel),
@@ -154,7 +154,7 @@ class ConnectDialog(tk.Toplevel):
 
         self.protocol("WM_DELETE_WINDOW", self.close_mod)
         self.grab_set() # makes the dialog modal
-    
+
     # returns a dictionary that is suitable for use
     # in the python-can Bus class constructor
     @property
@@ -164,7 +164,7 @@ class ConnectDialog(tk.Toplevel):
         for each in interface_db[self.interface]:
             d[each[1]] = self.__widgets[x].get()
         return d
-    
+
     # callback that changes the widgets that are shown
     # depending on the interface that's chosen
     def interface_change(self, event):
@@ -181,15 +181,15 @@ class ConnectDialog(tk.Toplevel):
                 self.__labels[x].grid_forget()
                 self.__labels[x].destroy()
                 self.__labels[x] = None
-        
+
         wlist = interface_db[self.interface]
         for x in range(len(wlist)):
             self.__labels[x] = ttk.Label(self.frm1, text = wlist[x][0])
             self.__labels[x].grid(row=x+1, column=0, sticky="W", pady = 2, padx = 5)
             self.__widgets[x] = wlist[x][2](self.frm1)
             self.__widgets[x].grid(row=x+1, column=1, sticky="W", pady = 2, padx = 5)
-            
-    # ok button callback.  It just sets the okay flag and then calls close    
+
+    # ok button callback.  It just sets the okay flag and then calls close
     def btn_ok(self):
         self.okay = True
         self.close_mod()
@@ -199,10 +199,10 @@ class ConnectDialog(tk.Toplevel):
         # we need to send it a value, otherwise there will be an exception when closing parent window
         self.returning = ";`x`;"
         self.quit()
-        
+
 if __name__ == "__main__":
     pass
 
-# TODO: 
+# TODO:
 #    Make the dialog default to the previous set of interface/arguments
 #    Dialog opening position and size

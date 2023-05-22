@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #  CAN-FIX Utilities - An Open Source CAN FIX Utility Package
-#  Copyright (c) 2012 Phil Birkelbach
+#  Copyright (c) 2023 Phil Birkelbach
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -18,14 +18,12 @@
 
 import logging
 import logging.config
-import cfutil.config as config
-from . import nodes
 from . import connection
 from . import firmware
+from cfutil.widgets import NodeSelect
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import filedialog
-from tkinter import messagebox
 import threading
 
 log = logging.getLogger(__name__)
@@ -51,41 +49,6 @@ class FirmwareThread(threading.Thread):
 # underlying .get() method or it may do something more complex.  The
 # value returned from these objects should be suitable as arguments to
 # the python-can Bus() class constructor.
-class NodeSelect(ttk.Combobox):
-    def __init__(self, parent, nodelist, *args, **kwargs):
-        ttk.Combobox.__init__(self, parent, *args, **kwargs)
-
-        self.nodelist = {}
-        for name, id in nodelist.items():
-            self.nodelist[f"{id}, {name}"] = id
-
-        self['values'] = [k for k in self.nodelist]
-
-    # Value is the node number of the selected node
-    # It can be either entered directly or the node selected by name
-    @property
-    def value(self):
-        s = self.get()
-        if s in self.nodelist:
-            x = self.nodelist[s]
-        else:
-            try:
-                x = int(s)
-                if x < 1 or x > 255: x = None
-            except:
-                x = None
-        return x
-
-    @value.setter
-    def value(self, v):
-        try:
-            for name, id in self.nodelist.items():
-                if v == id:
-                    self.set(name)
-                    return
-            self.set(str(int(v)))
-        except:
-           self.set("")
 
 class TextEntry(tk.Entry):
     def __init__(self, parent, *args, **kwargs):
@@ -126,7 +89,6 @@ class FirmwareDialog(tk.Toplevel):
         buttonframe.grid_columnconfigure(0, weight=1)
         buttonframe.grid(column=0, row=1, padx=2, pady=2, sticky=tk.EW)
 
-
         nl = {}
         for each in self.nodelist:
             if each is not None:
@@ -136,6 +98,7 @@ class FirmwareDialog(tk.Toplevel):
         l.grid(row=0, column=0, sticky=tk.E, pady = 2, padx = 5)
         self.nodeselect = NodeSelect(mainframe, nl)
         self.nodeselect.bind("<<ComboboxSelected>>", self.node_selected)
+
         self.nodeselect.value = node
         self.nodeselect.grid(row=0, column=1, sticky=tk.EW, pady = 2, padx = 5, columnspan=2)
 
