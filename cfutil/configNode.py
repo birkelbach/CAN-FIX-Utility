@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #  CAN-FIX Utilities - An Open Source CAN FIX Utility Package
-#  Copyright (c) 2012 Phil Birkelbach
+#  Copyright (c) 2023 Phil Birkelbach
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -125,7 +125,7 @@ class SaveThread(threading.Thread):
         self.conn = canbus.get_connection()
         self.output = {}
         self.file = file
- 
+
     def run(self):
         log.debug("looking for node at {}".format(self.nodeid))
         result = getNodeInformation(config.node, self.nodeid)
@@ -171,7 +171,7 @@ class SaveThread(threading.Thread):
             else:
                 mult = 1.0
             items[each["key"]] = {'name':name,'type':result.datatype,'multiplier':mult,'value':result.value}
-            
+
             self.statusCallback(f"Saving - {each['key']} - {name}")
             self.percentCallback(int(x/len(self.eds_info.configuration)*100))
         self.output['items'] = items
@@ -205,13 +205,13 @@ class LoadThread(threading.Thread):
             self.version = self.input['cfgVersion']
         else:
             self.version = None
-        
+
     def run(self):
         if self.version is None or self.version != 1.0:
             log.error("Unknown configuration file")
             self.statusCallback("Unknown configuration file")
             return
-        
+
         log.debug("looking for node at {}".format(self.nodeid))
         result = getNodeInformation(config.node, self.nodeid)
         if result is not None:
@@ -229,7 +229,7 @@ class LoadThread(threading.Thread):
                     return
                 if self.eds_info.version != self.input['version']:
                     self.statusCallback("Version Number mismatch")
-                    return    
+                    return
         else:
             log.error("Node Not Found")
             self.statusCallback(f"Node Not Found")
@@ -240,7 +240,7 @@ class LoadThread(threading.Thread):
             self.statusCallback(f"Sending Key {key}")
             result = setNodeConfiguration(config.node, self.nodeid, int(key), item['type'], item['multiplier'], item['value'])
             if result is None:
-                self.statusCallback("Error writing Configuration key {key}")        
+                self.statusCallback("Error writing Configuration key {key}")
             self.percentCallback(int(x/len(self.input['items'])*100))
         self.percentCallback(100)
         self.statusCallback("Finished")

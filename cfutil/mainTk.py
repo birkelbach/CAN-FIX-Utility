@@ -1,6 +1,6 @@
    #!/usr/bin/env python3
 #  CAN-FIX Utilities - An Open Source CAN FIX Utility Package
-#  Copyright (c) 2012 Phil Birkelbach
+#  Copyright (c) 2023 Phil Birkelbach
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@
 import logging
 import logging.config
 from threading import Thread
-import cfutil.config as config
 import canfix
 from . import nodes
 from . import connection
@@ -29,9 +28,11 @@ from .connectTk  import ConnectDialog
 from .configTk  import ConfigDialog
 from .infoTk import InfoDialog
 from .firmwareTk import FirmwareDialog
+from .loadsaveTk import LoadDialog, SaveDialog
 import tkinter as tk
 from tkinter.scrolledtext import ScrolledText
 import tkinter.ttk as ttk
+from tkinter.messagebox import showerror
 import queue
 
 log = logging.getLogger(__name__)
@@ -134,6 +135,8 @@ class App(tk.Tk):
         self.menubar = tk.Menu(self)
         self.config(menu=self.menubar)
         file_menu = tk.Menu(self.menubar, tearoff = 0)
+        file_menu.add_command(label='Save Configuration...', command=self.save_configuration, underline=0)
+        file_menu.add_command(label='Load Configuration...', command=self.load_configuration, underline=0)
         file_menu.add_separator()
         file_menu.add_command(label='Exit', command=self.destroy, underline=1)
         self.node_menu = tk.Menu(self.menubar, tearoff = 0)
@@ -242,7 +245,6 @@ class App(tk.Tk):
         self.trafficThread = None
         self.trafficButton.configure(command = self.start_traffic, text = "Start")
 
-
     def clear_traffic(self): # Clear Traffic button
         self.trafficbox['state']='normal'
         self.trafficbox.delete('1.0', tk.END)
@@ -284,7 +286,7 @@ class App(tk.Tk):
                 id.mainloop()
                 id.destroy()
             else:
-                log.error("No Node Selected")
+                showerror("Error", message="No Node Selected")
                 # TODO Error Pop Up
         elif tab['text'] == "Parameters":
             item = self.__get_current_parameter()
@@ -292,11 +294,30 @@ class App(tk.Tk):
                 p = item['values'][1]
                 print("Information for {}".format(p))
             else:
-                print("No Parameter Selected")
+                showerror("Error", message="No Parameter Selected")
         else:
             pass
 
     # Main GUI functions
+    def load_configuration(self):
+        node = self.__get_current_node()
+        if node is not None:
+            ld = LoadDialog(self, self.nt.nodelist, node)
+        else:
+            ld = LoadDialog(self, self.nt.nodelist, None)
+        ld.mainloop()
+        ld.destroy()
+
+
+    def save_configuration(self):
+        node = self.__get_current_node()
+        if node is not None:
+            sd = SaveDialog(self, self.nt.nodelist, node)
+        else:
+            sd = SaveDialog(self, self.nt.nodelist, None)
+        sd.mainloop()
+        sd.destroy()
+
     def connect(self):
         cd = ConnectDialog(self)
         cd.mainloop()
@@ -334,7 +355,7 @@ class App(tk.Tk):
             cd.mainloop()
             cd.destroy()
         else:
-            print("No Node Selected")
+            showerror("Error", message="No Node Selected")
 
     def load_firmware(self):
         tab = self.nb.tab('current')
