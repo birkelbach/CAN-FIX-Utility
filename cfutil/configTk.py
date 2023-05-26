@@ -60,7 +60,7 @@ class IntEntry(tk.Entry):
 
     @property
     def value(self):
-        return int(self.text.get())
+        return int(self.text.get(), 0)
 
     @value.setter
     def value(self, v):

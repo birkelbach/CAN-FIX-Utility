@@ -30,12 +30,10 @@ def main():
     parser = argparse.ArgumentParser(description='CAN-FIX Configuration Utility Program')
     parser.add_argument('--interactive', '-i', action='store_true', help='Run in interactive mode')
     l = sorted(can.interfaces.VALID_INTERFACES)
-    #l=['socketcan', 'serial', 'kvaser', 'pcan', 'usb2can']
     parser.add_argument('--interface', choices=l, help='CANBus Connection Interface Name')
     parser.add_argument('--channel', help='CANBus Channel or Device file')
     parser.add_argument('--bitrate', default=125, type=int, help='CANBus Bitrate')
     parser.add_argument('--node', default=0xFF, type=auto_int, help='Node Number')
-    #parser.add_argument('--ip-address', help='CANBus Network Adapter IP Address')
     parser.add_argument('--firmware-file', help='Firmware Filename')
     parser.add_argument('--firmware-code', type=auto_int, help='Firmware Verification Code')
     parser.add_argument('--firmware-driver', help='Firmware Driver to Use')
@@ -49,7 +47,8 @@ def main():
     parser.add_argument('--listen', action='store_true', help='Listen on the CANBus network and print to STDOUT')
     parser.add_argument('--frame-count', type=int, default=0, help='Number of frames to print before exiting')
     parser.add_argument('--raw', action='store_true', help='Display raw frames')
-    parser.add_argument('--timeout', type=int, default=0, help='Number of seconds to wait for a node to show up')
+    parser.add_argument('--timeout', type=float, default=0, help='CAN-FiX Response Timeout')
+    parser.add_argument('--node-timeout', type=int, default=0, help='Nodes will be considered dead if no message within this time')
     parser.add_argument('--load-configuration', type=argparse.FileType('r'),
                             help='Load the configuration from the file to --node')
     parser.add_argument('--save-configuration', type=argparse.FileType('w'),

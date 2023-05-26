@@ -36,6 +36,7 @@ interface = None
 channel = None
 bitrate = None
 node = None
+timeout = 5.0
 
 def initialize(file, args):
     global config

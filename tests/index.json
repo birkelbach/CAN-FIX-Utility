@@ -1,6 +1,6 @@
 {
     "name":"Basic Test Firmware",
-    "vcode":"0x1234",
+    "vcode":"0xF23",
     "files":[
         {
             "name":"CANSerialTest.hex",

@@ -2,9 +2,6 @@ Main Screen:
   Add hot keys for menus and functions
   Add error pop up dialogs
   Add more to status bar... Status LED indicators, message counts etc
-  Add Quality, Failure and Annunciate Flags to Data Table View
-
-
 
 Config Dialog:
   Warn user when closing dialog with un-sent (dirty changes)
@@ -17,7 +14,10 @@ Node Information:
   Node Status Error strings if in EDS file
   Node Status Values if in EDS file
   Add Parameters to Information
-  Add Update on timer or button?
+  Add Update on timer
+
+Parameter Information:
+  Add update on timer
 
 Feature Additions:
 
@@ -30,7 +30,7 @@ Feature Additions:
   with enough smarts to either read the canfix.json or generated from it.
 
   Online device file and protocol file updates?  Maybe online updates.  Links to
-  online help?
+  online help?  Maybe sitewide and user specific data file updates??
 
   "Save Entire Network Configuration" feature.
 
@@ -52,8 +52,11 @@ Enhancements:
 
   All dialogs need to pre-set itself to the last used or configured settings
 
-  Save settings to disk somehow. Separate from the ini file.
+  Save settings to disk somehow. Separate from the ini file.  Use appdirs module to
+  figure out where for each system.
 
   Descriptive Error when EDS file fails to load and fix crash on failure
+
+  Add configuration option for the node list and parameter list timeouts
 
 Bugs

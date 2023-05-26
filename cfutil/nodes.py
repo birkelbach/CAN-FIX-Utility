@@ -27,7 +27,7 @@ from . import devices
 
 log = logging.getLogger(__name__)
 
-class Paramter():
+class Parameter():
     def __init__(self):
         self.nodeid = None
         self.pid = None
@@ -36,9 +36,10 @@ class Paramter():
         self.name = None
         self.type = ''
         self.value = None
+        self.valstring = ""
         self.units = ''
         self.quality = ''
-        #TODO add min / max and meta information
+        self.meta = {}
 
     # This function returns True if a change was made
     def update(self, msg):
@@ -53,11 +54,21 @@ class Paramter():
         if msg.indexName is not None:
             self.name += " {} #{}".format(msg.indexName, msg.index+1)
         # Save some time by only doing this if we've changed
-        if self.value != msg.value:
-            self.valstring = msg.valueStr(units = True)
-            self.value = msg.value
-            self.units = msg.units
+        if msg.meta:
+            self.meta[msg.meta] = msg.value
+        else:
+            if self.value != msg.value:
+                self.valstring = msg.valueStr(units = True)
+                self.value = msg.value
+                self.units = msg.units
+            self.quality = ""
+            if msg.quality: self.quality += "Q"
+            if msg.failure: self.quality += "F"
+            if msg.annunciate: self.quality += "A"
+            if self.quality == "": self.quality = "OK"
+
         #TODO deal with quality string
+
         #TODO add min / max and meta information
         self.lastupdate = time.time()
         return True
@@ -215,7 +226,7 @@ class NodeThread(Thread):
             # If we don't already have this parameter then add it
             pid = (msg.identifier, msg.index)
             if pid not in self.parameterlist:
-                self.parameterlist[pid] = Paramter()
+                self.parameterlist[pid] = Parameter()
                 if self.__add_parameter_callback:
                     self.__add_parameter_callback(self.parameterlist[pid])
             # either way update the parameter in the dict and if the callback is

@@ -27,6 +27,7 @@ from . import connection
 from .connectTk  import ConnectDialog
 from .configTk  import ConfigDialog
 from .infoTk import InfoDialog
+from .paramInfoTk import ParamInfoDialog
 from .firmwareTk import FirmwareDialog
 from .loadsaveTk import LoadDialog, SaveDialog
 import tkinter as tk
@@ -139,24 +140,29 @@ class App(tk.Tk):
         file_menu.add_command(label='Load Configuration...', command=self.load_configuration, underline=0)
         file_menu.add_separator()
         file_menu.add_command(label='Exit', command=self.destroy, underline=1)
-        self.node_menu = tk.Menu(self.menubar, tearoff = 0)
-        self.node_menu.add_command(label='Connect...', underline=0, command=self.connect)
-        self.node_menu.add_command(label='Disconnect...', underline=0, command=self.disconnect)
-        self.node_menu.add_separator()
-        self.node_menu.add_command(label='Information...', underline=0, command=self.show_information)
-        self.node_menu.add_command(label='Configure Node...', underline=1, command=self.configure_node)
-        self.node_menu.add_separator()
-        self.node_menu.add_command(label='Update Firmware...', underline=0, command=self.load_firmware)
+
+        self.comm_menu = tk.Menu(self.menubar, tearoff = 0)
+        self.comm_menu.add_command(label='Connect...', underline=0, command=self.connect)
+        self.comm_menu.add_command(label='Disconnect...', underline=0, command=self.disconnect)
         if connection.canbus.connected:
-            self.node_menu.entryconfig('Connect...', state='disabled')
+            self.comm_menu.entryconfig('Connect...', state='disabled')
         else:
-            self.node_menu.entryconfig('Disconnect...', state='disabled')
+            self.comm_menu.entryconfig('Disconnect...', state='disabled')
+
+        self.tools_menu = tk.Menu(self.menubar, tearoff = 0)
+        self.tools_menu.add_command(label='Information...', underline=0, command=self.show_information)
+        #self.tools_menu.add_separator()
+        self.tools_menu.add_command(label='Configure Node...', underline=1, command=self.configure_node)
+        self.tools_menu.add_separator()
+        self.tools_menu.add_command(label='Update Firmware...', underline=0, command=self.load_firmware)
         help_menu = tk.Menu(self.menubar, tearoff = 0)
         help_menu.add_command(label='Specification', underline=0)
         help_menu.add_separator()
         help_menu.add_command(label='About', underline=0)
+
         self.menubar.add_cascade(label="File", menu=file_menu, underline=0)
-        self.menubar.add_cascade(label="Node", menu=self.node_menu, underline=0)
+        self.menubar.add_cascade(label="Comms", menu=self.comm_menu, underline=0)
+        self.menubar.add_cascade(label="Tools", menu=self.tools_menu, underline=0)
         self.menubar.add_cascade(label="Help", menu=help_menu, underline=0)
 
         nodeTab = cfTab(self.nb)
@@ -251,12 +257,12 @@ class App(tk.Tk):
         self.trafficbox['state']='disabled'
 
     def connect_callback(self):
-        self.node_menu.entryconfig('Connect...', state='disabled')
-        self.node_menu.entryconfig('Disconnect...', state='normal')
+        self.comm_menu.entryconfig('Connect...', state='disabled')
+        self.comm_menu.entryconfig('Disconnect...', state='normal')
 
     def disconnect_callback(self):
-        self.node_menu.entryconfig('Connect...', state='normal')
-        self.node_menu.entryconfig('Disconnect...', state='disabled')
+        self.comm_menu.entryconfig('Connect...', state='normal')
+        self.comm_menu.entryconfig('Disconnect...', state='disabled')
 
     def __get_current_node(self):
         curItem = self.nodeview.focus()
@@ -292,7 +298,9 @@ class App(tk.Tk):
             item = self.__get_current_parameter()
             if item['values']:
                 p = item['values'][1]
-                print("Information for {}".format(p))
+                id = ParamInfoDialog(self, p, self.nt)
+                id.mainloop()
+                id.destroy()
             else:
                 showerror("Error", message="No Parameter Selected")
         else:
@@ -436,7 +444,7 @@ class App(tk.Tk):
                         self.trafficbox['state']='disabled'
 
                 except Exception as e:
-                    print(e) #TODO change to debug logging
+                    print(f"Error in node.manager() {e}") #TODO change to debug logging
         self.after(100, self.manager)
 
     def run(self):

@@ -28,10 +28,18 @@ log = logging.getLogger(__name__)
 
 # Dialog box used to get information from the user regarding the
 # python-can connection that we wish to make.
-class InfoDialog(tk.Toplevel):
-    def __init__(self, parent, node, *args, **kwargs):
+class ParamInfoDialog(tk.Toplevel):
+    def __init__(self, parent, par, nodethread, *args, **kwargs):
         tk.Toplevel.__init__(self, parent, *args, **kwargs)
-        self.title("CANFiX Configuration Utility - Node {}".format(node.nodeid))
+        if isinstance(par, int):
+            pid = par
+            idx = 0
+        else:
+            pid, idx = par.split('.')
+            pid = int(pid)
+            idx = int(idx)
+        self.par = nodethread.parameterlist[(pid,idx)]
+        self.title("CANFiX Configuration Utility - Parameter {}".format(par))
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
@@ -44,34 +52,35 @@ class InfoDialog(tk.Toplevel):
         buttonframe.grid_columnconfigure(0, weight=1)
         buttonframe.grid(column=0, row=1, padx=2, pady=2, sticky=tk.EW)
 
-        self.infoView = ttk.Treeview(infoframe, columns=["value"])
+        style = ttk.Style()
+        style.configure("Mystyle.Treeview",  indent=15 , bd=0)
+        style.layout("Mystyle.Treeview", [('Mystyle.Treeview.treearea', {'sticky': 'nswe'})]) # Remove the borders
+
+        self.infoView = ttk.Treeview(infoframe, columns=["value"], style="Mystyle.Treeview")
         self.infoView.grid(row=0, column=0, sticky=tk.NSEW)
         infoScroll = ttk.Scrollbar(infoframe, command=self.infoView.yview)
         infoScroll.grid(row=0, column=1, sticky=tk.NS)
         self.infoView['yscrollcommand'] = infoScroll.set
-        self.infoView.column('#0', width=200, stretch=True)
+        self.infoView.column('#0', width=180, stretch=False)
         self.infoView.column('value', stretch=True)
-
-        l = ttk.Label(infoframe, text="Node Description:")
-        l.grid(row=1, column=0, sticky=tk.W)
-        self.textbox = tk.Text(infoframe, height=5, width=40)
-        self.textbox.grid(row=2, column=0, sticky=tk.NSEW)
-        scrollb = ttk.Scrollbar(infoframe, command=self.textbox.yview)
-        scrollb.grid(row=2, column=1, sticky=tk.NS)
-        self.textbox['yscrollcommand'] = scrollb.set
 
         # Close button
         btn1 = ttk.Button(buttonframe, text="Close", command=self.close_mod)
         btn1.grid(row=0, column=0, sticky=tk.E)
 
-        self.infoView.insert("", tk.END, iid="deviceid", text="Device ID", values=[node.deviceid])
-        self.infoView.insert("", tk.END, iid="nodeid", text="Node ID", values=[node.nodeid])
-        self.infoView.insert("", tk.END, iid="model", text="Model Number", values=[node.model])
-        self.infoView.insert("", tk.END, iid="version", text="Version", values=[node.version])
-        self.infoView.insert("", tk.END, iid="status", text="Status", values=[node.status_str])
-
-        self.textbox.insert('0.0', node.description)
-        self.textbox['state'] = tk.DISABLED
+        self.infoView.insert("", tk.END, iid="name", text="Name", values=[self.par.name])
+        self.infoView.insert("", tk.END, iid="nid", text="Node" , values=[self.par.nodeid])
+        self.infoView.insert("", tk.END, iid="pid", text="ID" , values=[self.par.pid])
+        self.infoView.insert("", tk.END, iid="index", text="Index Number" , values=[self.par.index])
+        self.infoView.insert("", tk.END, iid="type", text="Data Type" , values=[self.par.type])
+        self.infoView.insert("", tk.END, iid="value", text="Value" , values=[self.par.value])
+        self.infoView.insert("", tk.END, iid="units", text="Units" , values=[self.par.units])
+        self.infoView.insert("", tk.END, iid="quality", text="Quality" , values=[str('Q' in self.par.quality)])
+        self.infoView.insert("", tk.END, iid="fail", text="Failed" , values=[str('F' in self.par.quality)])
+        self.infoView.insert("", tk.END, iid="annunciate", text="Annunciate" , values=[str('A' in self.par.quality)])
+        self.infoView.insert("", tk.END, iid="meta", text="Meta Data" , values=[""], open=True)
+        for v in self.par.meta:
+            self.infoView.insert("meta", tk.END, open=True, iid=f"meta{v}", text=v ,values=[self.par.meta[v]])
 
         self.bind("<Escape>", self.close_mod)
 
