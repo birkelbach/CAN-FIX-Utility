@@ -24,6 +24,7 @@ from threading import Thread
 import canfix
 from . import nodes
 from . import connection
+from . import settings
 from .connectTk  import ConnectDialog
 from .configTk  import ConfigDialog
 from .infoTk import InfoDialog
@@ -122,6 +123,10 @@ class App(tk.Tk):
     def __init__(self, parent, *args, **kwargs):
         tk.Tk.__init__(self, parent, *args, **kwargs)
         self.title("CANFiX Configuration Utility")
+        g = settings.get("main_geometry")
+        if g:
+            self.geometry(g)
+
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.nb = ttk.Notebook(self)
@@ -212,6 +217,12 @@ class App(tk.Tk):
         # parameterTab.bind("<Visibility>", self.parameter_show)
         self.nodeview.bind("<Double-Button-1>", self.node_select)
         self.parameterView.bind("<Double-Button-1>", self.parameter_select)
+        self.protocol("WM_DELETE_WINDOW", self.close_mod)
+
+    def close_mod(self):
+        settings.set("main_geometry", self.geometry())
+        self.destroy()
+
 
     # These are callbacks that would be called from the node thread.  Commands
     # are added to the queue so that the gui thread can make updates.
@@ -358,7 +369,6 @@ class App(tk.Tk):
             if item['values']:
                 node = item['values'][0]
         if node is not None:
-            print("Configure Node {}".format(node))
             cd = ConfigDialog(self, self.nt.nodelist[node])
             cd.mainloop()
             cd.destroy()
@@ -452,6 +462,7 @@ class App(tk.Tk):
         self.after(100, self.manager)
         self.mainloop() # Start the GUI
         self.nt.stop()
+
 
 
 if __name__ == "__main__":

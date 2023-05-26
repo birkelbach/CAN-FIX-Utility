@@ -20,6 +20,7 @@ import logging
 import logging.config
 import cfutil.config as config
 from . import configNode
+from . import settings
 import tkinter as tk
 import tkinter.ttk as ttk
 import canfix
@@ -523,8 +524,11 @@ class ConfigTree(ttk.Treeview):
 class ConfigDialog(tk.Toplevel):
     def __init__(self, parent, node, *args, **kwargs):
         tk.Toplevel.__init__(self, parent, *args, **kwargs)
-
         self.title("CANFiX Configuration Utility - Config")
+        g = settings.get("config_geometry")
+        if g:
+            self.geometry(g)
+
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
@@ -600,6 +604,7 @@ class ConfigDialog(tk.Toplevel):
         self.treeView.send_config()
 
     def close_mod(self, e=None):
+        settings.set("config_geometry", self.geometry())
         # top right corner cross click: return value ;`x`;
         # we need to send it a value, otherwise there will be an exception when closing parent window
         self.returning = ";`x`;"

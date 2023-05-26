@@ -18,9 +18,7 @@
 
 import logging
 import logging.config
-import cfutil.config as config
-from . import nodes
-from . import connection
+from . import settings
 import tkinter as tk
 import tkinter.ttk as ttk
 
@@ -32,6 +30,10 @@ class InfoDialog(tk.Toplevel):
     def __init__(self, parent, node, *args, **kwargs):
         tk.Toplevel.__init__(self, parent, *args, **kwargs)
         self.title("CANFiX Configuration Utility - Node {}".format(node.nodeid))
+        g = settings.get("info_geometry")
+        if g:
+            self.geometry(g)
+
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
@@ -82,6 +84,7 @@ class InfoDialog(tk.Toplevel):
     def close_mod(self, e=None):
         # top right corner cross click: return value ;`x`;
         # we need to send it a value, otherwise there will be an exception when closing parent window
+        settings.set("info_geometry", self.geometry())
         self.returning = ";`x`;"
         self.quit()
 

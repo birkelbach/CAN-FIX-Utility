@@ -19,7 +19,9 @@
 import logging
 import logging.config
 import json
+import os
 from . import configNode
+from . import settings
 from cfutil.widgets import NodeSelect
 import tkinter as tk
 import tkinter.ttk as ttk
@@ -49,7 +51,11 @@ class LoadSaveDialog(tk.Toplevel):
             self.title("Load Configuration")
         else:
             self.title("Save Configuration")
-        self.grid_rowconfigure(0, weight=1)
+        g = settings.get("loadsave_geometry")
+        if g:
+            self.geometry(g)
+
+        #self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
         mainFrame = ttk.Frame(self) # main form where we put the interface and dynamic widgets
@@ -87,8 +93,12 @@ class LoadSaveDialog(tk.Toplevel):
         btnCancel = ttk.Button(self, text="Close", command=self.close_mod, takefocus=0)
         btnCancel.grid(row=1, column=0, sticky=tk.SE, padx=4, pady=4)
         if self.box_type == "LOAD":
+            fn = settings.get("last_load_file")
+            if fn: self.filenameVar.set(fn)
             btnText = "Send"
         else:
+            fn = settings.get("last_save_file")
+            if fn: self.filenameVar.set(fn)
             btnText = "Save"
         btnStart = ttk.Button(self, text=btnText, command=self.btn_apply, underline=0, takefocus=0)
         btnStart.grid(row=1, column=1, sticky=tk.SE, padx=4, pady=4)
@@ -104,10 +114,11 @@ class LoadSaveDialog(tk.Toplevel):
             ('json files', '*.json'),
             ('All files', '*.*')
         )
+        dn = os.path.dirname(self.filenameVar.get())
         if self.box_type == "LOAD":
-            filename = filedialog.askopenfilename(filetypes=filetypes)
+            filename = filedialog.askopenfilename(filetypes=filetypes, initialfile=self.filenameVar.get(), initialdir = dn)
         else:
-            filename = filedialog.asksaveasfilename(filetypes=filetypes)
+            filename = filedialog.asksaveasfilename(filetypes=filetypes, initialdir=dn)
         if filename:
             self.filenameVar.set(filename)
 
@@ -128,6 +139,7 @@ class LoadSaveDialog(tk.Toplevel):
         self.progress = p
 
     def close_mod(self, e=None):
+        settings.set("loadsave_geometry", self.geometry())
         # top right corner cross click: return value ;`x`;
         # we need to send it a value, otherwise there will be an exception when closing parent window
         self.returning = ";`x`;"
@@ -142,6 +154,7 @@ class LoadDialog(LoadSaveDialog):
 
     def btn_apply(self, e=None):
         self.file = open(self.filenameVar.get(), 'r')
+        settings.set("last_load_file", self.filenameVar.get())
         if self.nodeselect.value is None:
             messagebox.showerror("Load Error", message="You must Supply a node id first")
             return
@@ -167,6 +180,7 @@ class SaveDialog(LoadSaveDialog):
 
     def btn_apply(self, e=None):
         self.file = open(self.filenameVar.get(), 'w')
+        settings.set("last_save_file", self.filenameVar.get())
         if self.nodeselect.value is None:
             messagebox.showerror("Save Error", message="You must Supply a node id first")
             return

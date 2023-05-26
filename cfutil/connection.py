@@ -154,7 +154,6 @@ class CANBus(threading.Thread):
         log.debug("Connecting... {}".format(interface))
         try:
             self.__bus = can.ThreadSafeBus(bustype=interface, **kwargs)
-            #self.channel = channel
             self.interface = interface
             self.__connected.set()
             if self.connectedCallback is not None:

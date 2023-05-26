@@ -18,9 +18,7 @@
 
 import logging
 import logging.config
-import cfutil.config as config
-from . import nodes
-from . import connection
+from . import settings
 import tkinter as tk
 import tkinter.ttk as ttk
 
@@ -40,6 +38,10 @@ class ParamInfoDialog(tk.Toplevel):
             idx = int(idx)
         self.par = nodethread.parameterlist[(pid,idx)]
         self.title("CANFiX Configuration Utility - Parameter {}".format(par))
+        g = settings.get("paraminfo_geometry")
+        if g:
+            self.geometry(g)
+
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
@@ -89,6 +91,7 @@ class ParamInfoDialog(tk.Toplevel):
 
 
     def close_mod(self, e=None):
+        settings.set("paraminfo_geometry", self.geometry())
         # top right corner cross click: return value ;`x`;
         # we need to send it a value, otherwise there will be an exception when closing parent window
         self.returning = ";`x`;"

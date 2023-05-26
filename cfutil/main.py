@@ -70,9 +70,10 @@ def main():
     logging.config.fileConfig(log_config_file)
     log = logging.getLogger(__name__)
 
-    # Now we start doing our job
+    # These need to be loaded after the logger is initialized
     from . import mainCommand
     from . import connection
+    from . import settings
 
     try:
         connection.canbus.connect(config.interface, channel=config.channel)
