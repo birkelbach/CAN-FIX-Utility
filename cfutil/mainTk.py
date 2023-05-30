@@ -31,6 +31,7 @@ from .infoTk import InfoDialog
 from .paramInfoTk import ParamInfoDialog
 from .firmwareTk import FirmwareDialog
 from .loadsaveTk import LoadDialog, SaveDialog
+from .prefsTk import PrefsDialog
 import tkinter as tk
 from tkinter.scrolledtext import ScrolledText
 import tkinter.ttk as ttk
@@ -143,6 +144,9 @@ class App(tk.Tk):
         file_menu = tk.Menu(self.menubar, tearoff = 0)
         file_menu.add_command(label='Save Configuration...', command=self.save_configuration, underline=0)
         file_menu.add_command(label='Load Configuration...', command=self.load_configuration, underline=0)
+        file_menu.add_separator()
+        file_menu.add_command(label='Preferences...', command=self.preferences, underline=0)
+        file_menu.entryconfig('Preferences...', state='disabled') # Temporary until we finish the preferences
         file_menu.add_separator()
         file_menu.add_command(label='Exit', command=self.destroy, underline=1)
 
@@ -336,6 +340,12 @@ class App(tk.Tk):
             sd = SaveDialog(self, self.nt.nodelist, None)
         sd.mainloop()
         sd.destroy()
+
+    def preferences(self):
+        prefs = PrefsDialog(self)
+        prefs.mainloop()
+        prefs.destroy()
+
 
     def connect(self):
         cd = ConnectDialog(self)
