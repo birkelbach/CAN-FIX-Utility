@@ -18,41 +18,39 @@
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 
-import appdirs
 import os
 import json
 import logging
+from . import config
 
 log = logging.getLogger(__name__)
 
 __data = {"version":1}
 
-datapath = appdirs.user_data_dir() + "/cfutil/"
+#datapath = appdirs.user_data_dir() + "/cfutil/"
+datapath = config.datapath
 
 log.info("Loading Settings")
 
 def save_file():
-    with open(datapath + "settings.json", "w") as file:
+    with open(datapath + "/settings.json", "w") as file:
         json.dump(__data, file, indent=2)
 
 def run():
     global __data
     # See if the directory exists and if not create it
-    if not os.path.exists(datapath):
-        os.mkdir(datapath)
+    os.makedirs(datapath + "/eds", exist_ok=True)
+
 
     try:
-        with open(datapath + "settings.json", "r") as file:
+        with open(datapath + "/settings.json", "r") as file:
             __data = json.load(file)
     except FileNotFoundError:
         log.info("Creating New Settings File")
         save_file()
 
 def get(key):
-    if key in __data:
-        return __data[key]
-    else:
-        return None
+    return __data.get(key, None)
 
 def set(key, v, save=True):
     __data[key] = v

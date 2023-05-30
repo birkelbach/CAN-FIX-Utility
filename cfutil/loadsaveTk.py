@@ -37,8 +37,9 @@ class SaveError(Exception):
     pass
 
 
-# Dialog box used to get information from the user regarding the
-# python-can connection that we wish to make.
+# Dialog box used to save / load configuration information
+# to particular node.  This is a base class that is inherited
+# by either the LoadDialog or SaveDialog
 class LoadSaveDialog(tk.Toplevel):
     def __init__(self, parent, node, *args, **kwargs):
         tk.Toplevel.__init__(self, parent, *args, **kwargs)

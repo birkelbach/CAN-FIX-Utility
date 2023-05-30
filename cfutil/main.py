@@ -17,6 +17,10 @@
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 import argparse
+import appdirs
+import os
+import sys
+import shutil
 import logging
 import can
 import logging.config
@@ -33,7 +37,7 @@ def main():
     parser.add_argument('--interface', choices=l, help='CANBus Connection Interface Name')
     parser.add_argument('--channel', help='CANBus Channel or Device file')
     parser.add_argument('--bitrate', default=125, type=int, help='CANBus Bitrate')
-    parser.add_argument('--node', default=0xFF, type=auto_int, help='Node Number')
+    parser.add_argument('--node', default=0xFF, type=auto_int, help='Our Node Number')
     parser.add_argument('--firmware-file', help='Firmware Filename')
     parser.add_argument('--firmware-code', type=auto_int, help='Firmware Verification Code')
     parser.add_argument('--firmware-driver', help='Firmware Driver to Use')
@@ -61,19 +65,17 @@ def main():
 
     args = parser.parse_args()
 
-    config_file = args.config_file if args.config_file else 'cfutil/config/main.ini'
-    log_config_file = args.log_config if args.log_config else config_file
 
-    config.initialize(config_file, args)
+    config.initialize(args)
 
     # Initialize Logger
-    logging.config.fileConfig(log_config_file)
+    logging.config.fileConfig(config.log_config_file)
     log = logging.getLogger(__name__)
 
     # These need to be loaded after the logger is initialized
+    from . import settings
     from . import mainCommand
     from . import connection
-    from . import settings
 
     try:
         connection.canbus.connect(config.interface, channel=config.channel)

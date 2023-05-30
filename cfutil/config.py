@@ -22,15 +22,18 @@
 
 import glob
 import os
+import sys
+import shutil
 import platform
 import configparser
+import appdirs
 
 # The DataPath is the location of our XML device definition and
 # protocol definition files.  It is simply a string of the absolute
 # path to the data directory.
-DataPath = os.path.dirname(os.path.dirname(__file__)) + "/cfutil/data/"
-#DataPath = "/home/someuser/CANFIX/Utility/data/"
 
+datapath = None
+data_index_uri = None
 
 interface = None
 channel = None
@@ -38,17 +41,36 @@ bitrate = None
 node = None
 timeout = 5.0
 
-def initialize(file, args):
+
+def initialize(args):
     global config
     global interface
     global channel
     global bitrate
     global node
-    global auto_connect
-    global valid_interfaces
+    global datapath
+    global data_index_uri
+    global log_config_file
+
+    def_config_path = appdirs.user_config_dir() + "/cfutil"
+    def_config_file = def_config_path + "/main.ini"
+
+    if not os.path.exists(def_config_path):
+        os.makedirs(def_config_path)
+    # If the config file is not in that directory then copy it from the distribution
+    if not os.path.exists(def_config_file):
+        sp = sys.path[0] + "/cfutil/config/main.ini" # The path where our script is installed
+        shutil.copyfile(sp, def_config_file)
+
+    config_file = args.config_file if args.config_file else def_config_file
+    log_config_file = args.log_config if args.log_config else config_file
 
     config = configparser.RawConfigParser()
-    config.read(file)
+    config.read(def_config_file)
+
+    # Configure Application related data
+    datapath = config.get("app", "data_directory", fallback=appdirs.user_data_dir() + "/cfutil")
+    data_index_uri = config.get("app", "data_index_uri", fallback=None)
     # Configure CAN connection related data
     if args.interface:
         interface = args.interface
@@ -60,15 +82,18 @@ def initialize(file, args):
         channel = config.get("can", "channel")
     try:
         if args.bitrate:
-            br = args.bitrate
+            bitrate = args.bitrate
         else:
-            br = config.get("can", "bitrate")
-        bitrate = int(br)
+            bitrate = config.getint("can", "bitrate")
     except:
         bitrate = 125000
 
-    node = int(config.get("canfix", "node"))
+    node = config.getint("canfix", "node")
     #auto_connect = config.getboolean("can", "auto_connect")
+
+def set_value(section, option, value):
+    config.set(section, option, value)
+
 
 
 # The following is the configured communications (serial) ports

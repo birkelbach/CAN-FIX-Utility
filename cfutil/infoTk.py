@@ -24,8 +24,7 @@ import tkinter.ttk as ttk
 
 log = logging.getLogger(__name__)
 
-# Dialog box used to get information from the user regarding the
-# python-can connection that we wish to make.
+# Dialog box used to show information about a particular node
 class InfoDialog(tk.Toplevel):
     def __init__(self, parent, node, *args, **kwargs):
         tk.Toplevel.__init__(self, parent, *args, **kwargs)

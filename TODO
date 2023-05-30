@@ -10,6 +10,9 @@ Config Dialog:
   Add spin buttons to IntEntry widget
 
 
+Firmware Dialog:
+  Use settings to save geometry and firmware arguments
+
 Node Information:
   Node Status Error strings if in EDS file
   Node Status Values if in EDS file
@@ -47,16 +50,20 @@ Feature Additions:
 
 Enhancements:
 
+  Much work on CAN interface configuration for the various interfaces
+
   Improve Connection status on the status bar.  Something like a blinking green light
   or frame counter.
-
-  All dialogs need to pre-set itself to the last used or configured settings
-
-  Save settings to disk somehow. Separate from the ini file.  Use appdirs module to
-  figure out where for each system.
 
   Descriptive Error when EDS file fails to load and fix crash on failure
 
   Add configuration option for the node list and parameter list timeouts
+
+  Add configuration to keep data index download from happening every time the
+  program is launched.  (daily, weekly, etc)
+
+  Instead of downloading every EDS file in the index we need to let the user decide
+  when to download any given EDS file.  When a node is "unknown" we should be albe
+  to right-click and select download EDS file.
 
 Bugs
