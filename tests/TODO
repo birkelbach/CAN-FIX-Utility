@@ -1,4 +1,0 @@
-Test each way to load firmware on the command line...
-  * Just giving a node number and having it found on the network and device database
-  * Giving the device id, model and version and looking it up in the device database
-  * Giving the node number, driver and firmware verification code manually

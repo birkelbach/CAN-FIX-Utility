@@ -28,3 +28,7 @@ configuring, monitoriing and troubleshooting a CAN-FiX network.
 
 General Description
 -------------------
+
+CFUtil can be used as a graphical desktop application (GUI) or as a command line
+utility.  By using the program as a command line utility many tasks can be automated,
+such as loading firmware or loading / saving node configurations.

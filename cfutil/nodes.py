@@ -266,6 +266,7 @@ class NodeThread(Thread):
 
 
     def run(self):
+        log.info("Starting Node Thread")
         lastscan = time.time()
         self.conn = connection.canbus.get_connection()
         while(not self.getout):

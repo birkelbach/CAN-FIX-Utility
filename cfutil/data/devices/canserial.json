@@ -1,8 +1,0 @@
-{
-  "name":"MakerPlane CAN / Serial Gateway",
-  "type":"0xB3",
-  "model":"0x000001",
-  "version":"0x01",
-  "firmware_code":"0x7B3",
-  "firmware_driver":"AT2561"
-}

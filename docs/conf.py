@@ -138,8 +138,7 @@ latex_elements = {
     # The font size ('10pt', '11pt' or '12pt').
     #
     'pointsize': '10pt',
-    'maketitle': r"""\newcommand\sphinxbackoftitlepage{\textbf{Copyright \copyright 2011 - \the\year\ Vern
-Little, Phil Birkelbach, John Nicol}\par
+    'maketitle': r"""\newcommand\sphinxbackoftitlepage{\textbf{Copyright \copyright 2011 - \the\year\ Phil Birkelbach}\par
 All rightrs reserved.  No part of this document may be reproduced or transmitted in any form or by any means, electronic or mechanical, including photocopying, recording, or by any information storage and retrieval system, except in accordance with the "Creative Commons License - Attribution-ShareAlike 3.0" or with prior written permission from the Authors(s). See the License section for details.
 }\sphinxmaketitle""",
 

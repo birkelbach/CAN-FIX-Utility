@@ -67,3 +67,7 @@ Enhancements:
   to right-click and select download EDS file.
 
 Bugs
+
+  The version parameter in the EDS files should be allowed to have multiple values
+  in a list.  This keeps device makers from having to re-issue an EDS for every
+  firmware release even if the information didn't change.
