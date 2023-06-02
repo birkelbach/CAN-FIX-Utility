@@ -20,7 +20,6 @@
 # This module is used to save and load complete configurations to give nodes
 
 
-from PyQt5.QtCore import *
 import logging
 import json
 import time

@@ -59,7 +59,10 @@ def initialize(args):
         os.makedirs(def_config_path)
     # If the config file is not in that directory then copy it from the distribution
     if not os.path.exists(def_config_file):
-        sp = sys.path[0] + "/cfutil/config/main.ini" # The path where our script is installed
+        if os.path.exists(sys.path[0] + "/cfutil/data/main.ini"):
+            sp = sys.path[0] + "/cfutil/data/main.ini" # The path where our script is installed
+        else:
+            sp = os.path.dirname(__file__) + "/data/main.ini"
         shutil.copyfile(sp, def_config_file)
 
     config_file = args.config_file if args.config_file else def_config_file

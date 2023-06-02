@@ -11,7 +11,11 @@ setup(
     license='GNU General Public License Version 2',
     url='https://github.com/birkelbach/CAN-FIX-Utility',
     packages=find_packages(),
-    package_data = {'config':['main.ini']},
-    install_requires = ['python-can', 'tk', 'intelhex', 'python-canfix', 'appdirs' ],
+    package_data = {'cfutil.data':['*.ini']},
+    install_requires = ['python-can', 'intelhex', 'python-canfix', 'appdirs'],
+    entry_points = {
+        'console_scripts': ['cfutil=cfutil.main:main'],
+    },
+
     #test_suite = 'tests',
 )

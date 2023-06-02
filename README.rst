@@ -30,3 +30,46 @@ The utility can also be used as a command line program.  This would aid in
 automating configuration of nodes, downloading firmware and doing automated
 testing.  This utility is **NOT** meant to be used in flight.  It is for
 configuration and testing on the ground only.
+
+Installation
+------------
+
+Clone the repository from GitHub using this command...
+
+  $ git clone https://github.com/birkelbach/CAN-FIX-Utility.git canfix-utility
+
+This should create a canfix-utility directory where the source files are now
+located.
+
+There are several dependencies for this utility.  The main one is tkinter.
+You should be able to install tkinter from your Linux distribution's repository
+or by checking the tkinter box while installing Python in Windows.  The rest
+of the dependencies should be installable with pip.
+
+We are working on making the installation easier.  Right now you may have okay
+luck by going to the directory where you have cloned the repository and use
+this command...
+
+  $ pip install .
+
+Depending on your distribution you man need to use...
+
+  $ pip3 install .
+
+If this doesn't work or you simply want to run the application from the
+source directory then you should be able to install all of the dependencies
+with the command...
+
+  $ pip3 install -r requirements.txt
+
+This will install all of the dependencies for this application except for
+tkinter.
+
+If you were able to get the program installed then you should be able to
+use this command.
+
+  $ cfutil
+
+if you are running from the source directory then this command should work
+
+  $ python3 cfutil.py
