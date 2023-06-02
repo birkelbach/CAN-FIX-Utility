@@ -8,7 +8,7 @@ Config Dialog:
   Save position and size of dialog
   Deal with unknown node types on the network??
   Add spin buttons to IntEntry widget
-
+  Add help text from EDS file if available
 
 Firmware Dialog:
   Use settings to save geometry and firmware arguments

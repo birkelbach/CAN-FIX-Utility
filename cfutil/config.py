@@ -34,6 +34,7 @@ import appdirs
 
 datapath = None
 data_index_uri = None
+data_download_interval = None
 
 interface = None
 channel = None
@@ -41,6 +42,9 @@ bitrate = None
 node = None
 timeout = 5.0
 
+# Location where we will be storing our configuration file.
+def_config_path = appdirs.user_config_dir() + "/cfutil"
+def_config_file = def_config_path + "/main.ini"
 
 def initialize(args):
     global config
@@ -50,10 +54,7 @@ def initialize(args):
     global node
     global datapath
     global data_index_uri
-    global log_config_file
-
-    def_config_path = appdirs.user_config_dir() + "/cfutil"
-    def_config_file = def_config_path + "/main.ini"
+    global data_download_interval
 
     if not os.path.exists(def_config_path):
         os.makedirs(def_config_path)
@@ -65,15 +66,13 @@ def initialize(args):
             sp = os.path.dirname(__file__) + "/data/main.ini"
         shutil.copyfile(sp, def_config_file)
 
-    config_file = args.config_file if args.config_file else def_config_file
-    log_config_file = args.log_config if args.log_config else config_file
-
     config = configparser.RawConfigParser()
     config.read(def_config_file)
 
     # Configure Application related data
     datapath = config.get("app", "data_directory", fallback=appdirs.user_data_dir() + "/cfutil")
     data_index_uri = config.get("app", "data_index_uri", fallback=None)
+    data_download_interval = float(config.get("app", "data_download_interval", fallback=0))
     # Configure CAN connection related data
     if args.interface:
         interface = args.interface
@@ -96,7 +95,13 @@ def initialize(args):
 
 def set_value(section, option, value):
     config.set(section, option, value)
+    with open(def_config_file, 'w') as file:
+        config.write(file)
 
+# This is different that reading the other options in that it
+# gives us what is in the configuration file.
+def get_value(section, option):
+    return config.get(section, option)
 
 
 # The following is the configured communications (serial) ports

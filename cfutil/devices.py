@@ -24,11 +24,13 @@
 import os
 import logging
 import json
+import time
 import urllib.request
 import shutil
 import hashlib
 from collections import OrderedDict
 import cfutil.config as config
+from . import settings
 
 log = logging.getLogger(__name__)
 
@@ -75,8 +77,8 @@ def download_file(uri, filename):
 # Here we decide if it's time to download and check a new data file index.  Then we loop through
 # the EDS file list and compare the SHA256 hashes against the files that we already have in the
 # data directory.  If any of thme need to be downloaded then we do that now.
-# TODO: Limit this to daily / weekly, etc.
-if True:
+last_start = 0 if settings.get("last_start") is None else settings.get("last_start")
+if config.data_download_interval != -1 and (time.time() - last_start) > config.data_download_interval:
     log.info(f"Retrieving Data Index from {config.data_index_uri}")
 
     with urllib.request.urlopen(config.data_index_uri) as response, open(config.datapath + "/cfdataindex.json", 'wb') as out_file:

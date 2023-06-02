@@ -17,10 +17,11 @@
 #  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 import argparse
-import appdirs
-import os
-import sys
-import shutil
+# import appdirs
+# import os
+# import sys
+# import shutil
+import time
 import logging
 import can
 import logging.config
@@ -57,10 +58,6 @@ def main():
                             help='Load the configuration from the file to --node')
     parser.add_argument('--save-configuration', type=argparse.FileType('w'),
                             help='Save the configuration to the file from --node')
-    parser.add_argument('--config-file', type=argparse.FileType('r'),
-                            help='Alternate configuration file')
-    parser.add_argument('--log-config', type=argparse.FileType('w'),
-                            help='Alternate logger configuration file')
 
 
     args = parser.parse_args()
@@ -69,7 +66,7 @@ def main():
     config.initialize(args)
 
     # Initialize Logger
-    logging.config.fileConfig(config.log_config_file)
+    logging.config.fileConfig(config.def_config_file)
     log = logging.getLogger(__name__)
 
     # These need to be loaded after the logger is initialized
@@ -77,6 +74,7 @@ def main():
     from . import mainCommand
     from . import connection
 
+    settings.set("last_start", time.time())
     try:
         connection.canbus.connect(config.interface, channel=config.channel)
     except:

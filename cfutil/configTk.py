@@ -413,6 +413,9 @@ class ConfigRecord():
         self.__widget.value = self.value
         return self.__widget
 
+    def __str__(self):
+        return f"ConfigRecord key={self.key} = {self.value}"
+
 
 
 class ConfigTree(ttk.Treeview):
@@ -441,10 +444,16 @@ class ConfigTree(ttk.Treeview):
                 for each in self.records:
                     if each.key == i.parentKey:
                         each.dependentChildren.append(i)
-
+        # This error thing is so that we can catch the timeout and close the dialog box but
+        # still get the exception up to mainTk so that it can pring the error on the
+        # status bar or pop up a messagebox.
+        error = None
         for i in self.records:
             try:
                 i.value = self.get_config_value(i)
+                if i.value is None:
+                    error = TimeoutError("Node Did Not Respond")
+                    break
                 i.save()
                 if i.dependentChildren:
                     for each in i.dependentChildren:
@@ -455,6 +464,9 @@ class ConfigTree(ttk.Treeview):
                 #print(e)
                 self.insert('', 'end', iid=i.key, values = [i.key, i.name, "-", ""])
                 #raise(e)
+
+        if error:
+            raise(error)
 
 
     def set_config_value(self, record):
@@ -479,8 +491,12 @@ class ConfigTree(ttk.Treeview):
     # This reads all the record values from the node and updates the list
     def refresh(self):
         for i in self.records:
-            i.value = self.get_config_value(i)
-            self.set_value(i.key, i.value)
+            x = self.get_config_value(i)
+            if x is not None:
+                i.value = x
+                i.save()
+            self.set_value(i.key, x)
+
 
     def send_config(self):
         # Loop through all the records and send the dirty ones.
@@ -499,9 +515,11 @@ class ConfigTree(ttk.Treeview):
         for i in self.records:
             if i.key == recordKey:
                 record = i
-        #i.dirty = True
-        record.value = value
-        self.set(recordKey, "value", record.value_text)
+        if value is not None:
+            record.value = value
+            self.set(recordKey, "value", record.value_text)
+        else:
+            self.set(recordKey, "value", "-")
         if record.dirty:
             self.item(recordKey, tags="dirty")
         else:
@@ -537,7 +555,11 @@ class ConfigDialog(tk.Toplevel):
         mainFrame.grid_rowconfigure(0, weight=1)
         mainFrame.grid_columnconfigure(0, weight=1)
 
-        self.treeView = ConfigTree(mainFrame, node)
+        try:
+            self.treeView = ConfigTree(mainFrame, node)
+        except Exception as e:
+            self.destroy()
+            raise(e)
         self.treeView.grid(column=0, row=0, sticky=tk.NSEW)
         self.treeView.bind("<<TreeviewSelect>>", self.configSelect)
         id = self.treeView.get_children()[0]

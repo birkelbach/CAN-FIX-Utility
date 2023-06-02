@@ -379,7 +379,11 @@ class App(tk.Tk):
             if item['values']:
                 node = item['values'][0]
         if node is not None:
-            cd = ConfigDialog(self, self.nt.nodelist[node])
+            try:
+                cd = ConfigDialog(self, self.nt.nodelist[node])
+            except Exception as e:
+                self.sb.set(f"Error: {e}")
+                return
             cd.mainloop()
             cd.destroy()
         else:

@@ -72,7 +72,7 @@ def queryNodeConfiguration(sendNode, destNode, key):
     endtime = time.time() + 1.0
     while(True):
         try:
-            rmsg = conn.recv(timeout = 1.0)
+            rmsg = conn.recv(timeout = 0.5)
         except connection.Timeout:
             canbus.free_connection(conn)
             return None
